@@ -1,0 +1,48 @@
+#ifndef _STM32_DEVICE_QUEUE_H_
+#define _STM32_DEVICE_QUEUE_H_
+
+#include <smac-mcu.h>
+#include <stdint.h>
+
+#ifdef __cplusplus
+extern "C" {
+#endif // __cplusplus
+
+typedef void* stm32DeviceHandle;
+
+typedef uint32_t stm32DeviceAddition;
+
+typedef void* stm32DeviceEventData;
+
+typedef struct
+{
+    stm32DeviceHandle handle;
+    stm32DeviceAddition addition;
+} stm32Device;
+
+typedef struct
+{
+    stm32Device* device;
+    stm32DeviceEventData event_data;
+} stm32DeviceEvent;
+
+void stm32_device_queue_initialize(void);
+
+stm32Device* stm32_device_queue_allocate(void* handle, uint32_t addition);
+
+void stm32_device_queue_free(stm32Device* device);
+
+void stm32_device_event_queue_initialize(void);
+
+smacRetCode_t stm32_device_event_queue_allocate(stm32Device* device,
+                                                stm32DeviceEventData event_data);
+
+void stm32_device_event_queue_free(stm32Device* device);
+
+stm32DeviceEvent* stm32_device_event_queue_search(stm32DeviceHandle handle);
+
+#ifdef __cplusplus
+}
+#endif // __cplusplus
+
+#endif // _STM32_DEVICE_QUEUE_H_
