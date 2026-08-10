@@ -28,7 +28,7 @@ typedef struct
 
 void stm32_device_queue_initialize(void);
 
-stm32Device* stm32_device_queue_allocate(void* handle, uint32_t addition);
+stm32Device* stm32_device_queue_allocate(stm32DeviceHandle handle, stm32DeviceAddition addition);
 
 void stm32_device_queue_free(stm32Device* device);
 
@@ -40,6 +40,9 @@ smacRetCode_t stm32_device_event_queue_allocate(stm32Device* device,
 void stm32_device_event_queue_free(stm32Device* device);
 
 stm32DeviceEvent* stm32_device_event_queue_search(stm32DeviceHandle handle);
+
+stm32DeviceEvent* stm32_device_event_queue_search_with_addition(stm32DeviceHandle handle,
+                                                                stm32DeviceAddition addition);
 
 #ifdef __cplusplus
 }

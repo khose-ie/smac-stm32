@@ -11,8 +11,16 @@ void stm32_device_queue_initialize(void)
     memset(_device_queue, 0, sizeof(_device_queue));
 }
 
-stm32Device* stm32_device_queue_allocate(void* handle, uint32_t addition)
+stm32Device* stm32_device_queue_allocate(stm32DeviceHandle handle, stm32DeviceAddition addition)
 {
+    for (int i = 0; i < SMAC_STM32_PERIPH_NUM; i++)
+    {
+        if ((_device_queue[i].handle == handle) && (_device_queue[i].addition == addition))
+        {
+            return &_device_queue[i];
+        }
+    }
+
     for (int i = 0; i < SMAC_STM32_PERIPH_NUM; i++)
     {
         if (_device_queue[i].handle == NULL)
@@ -61,7 +69,7 @@ smacRetCode_t stm32_device_event_queue_allocate(stm32Device* device,
     {
         if (_device_event_queue[i].device == NULL)
         {
-            _device_event_queue[i].device       = device;
+            _device_event_queue[i].device     = device;
             _device_event_queue[i].event_data = event_data;
             return SMAC_RET_OK;
         }
@@ -78,7 +86,7 @@ void stm32_device_event_queue_free(stm32Device* device)
         {
             if (_device_event_queue[i].device == device)
             {
-                _device_event_queue[i].device       = NULL;
+                _device_event_queue[i].device     = NULL;
                 _device_event_queue[i].event_data = NULL;
             }
         }
@@ -87,11 +95,19 @@ void stm32_device_event_queue_free(stm32Device* device)
 
 stm32DeviceEvent* stm32_device_event_queue_search(stm32DeviceHandle handle)
 {
+    return stm32_device_event_queue_search_with_addition(handle, 0);
+}
+
+stm32DeviceEvent* stm32_device_event_queue_search_with_addition(stm32DeviceHandle handle,
+                                                                stm32DeviceAddition addition)
+{
     if (handle != NULL)
     {
         for (int i = 0; i < SMAC_STM32_EVENTABLE_PERIPH_NUM; i++)
         {
-            if (_device_event_queue[i].device->handle == handle)
+            if (((_device_event_queue[i].device->handle == handle) &&
+                 (_device_event_queue[i].device->addition == addition)) ||
+                ((handle == NULL) && (_device_event_queue[i].device->addition == addition)))
             {
                 return &_device_event_queue[i];
             }
