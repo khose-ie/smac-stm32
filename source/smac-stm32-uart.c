@@ -39,12 +39,12 @@ void smac_uart_drop(smacUart_t uart)
     stm32_device_event_queue_free((stm32Device*)uart);
 }
 
-smacRetCode_t smac_uart_open_event(smacUart_t uart, smacMcuEventData_t event_data)
+smacRetCode_t smac_uart_set_event(smacUart_t uart, smacMcuEventData_t event_data)
 {
     return stm32_device_event_queue_allocate((stm32Device*)uart, event_data);
 }
 
-void smac_uart_close_event(smacUart_t uart)
+void smac_uart_clean_event(smacUart_t uart)
 {
     stm32_device_event_queue_free((stm32Device*)uart);
 }
