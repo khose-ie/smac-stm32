@@ -29,6 +29,7 @@ extern "C" {
 #define SMAC_STM32_PERIPH_NUM (10)
 #define SMAC_STM32_EVENTABLE_PERIPH_NUM (10)
 
+#include <stm32h5xx_hal.h>
 
 #ifdef __cplusplus
 }
