@@ -6,6 +6,8 @@ static stm32Device _device_queue[SMAC_STM32_PERIPH_NUM];
 
 static stm32DeviceEvent _device_event_queue[SMAC_STM32_EVENTABLE_PERIPH_NUM];
 
+static stm32DeviceCache _device_cache_queue[SMAC_STM32_CACHEABLE_PERIPH_NUM];
+
 void stm32_device_queue_initialize(void)
 {
     memset(_device_queue, 0, sizeof(_device_queue));
@@ -110,6 +112,95 @@ stm32DeviceEvent* stm32_device_event_queue_search_with_addition(stm32DeviceHandl
                 ((handle == NULL) && (_device_event_queue[i].device->addition == addition)))
             {
                 return &_device_event_queue[i];
+            }
+        }
+    }
+
+    return NULL;
+}
+
+smacRetCode_t stm32_device_cache_queue_allocate(stm32Device* device,
+                                                stm32DeviceCacheData cache_data)
+{
+    if (device == NULL)
+    {
+        return SMAC_RET_PARAM_ERR;
+    }
+
+    for (int i = 0; i < SMAC_STM32_CACHEABLE_PERIPH_NUM; i++)
+    {
+        if (_device_cache_queue[i].device == device)
+        {
+            _device_cache_queue[i].cache_data = cache_data;
+            return SMAC_RET_OK;
+        }
+    }
+
+    for (int i = 0; i < SMAC_STM32_CACHEABLE_PERIPH_NUM; i++)
+    {
+        if (_device_cache_queue[i].device == NULL)
+        {
+            _device_cache_queue[i].device     = device;
+            _device_cache_queue[i].cache_data = cache_data;
+            return SMAC_RET_OK;
+        }
+    }
+
+    return SMAC_RET_STACK_OVERFLOW;
+}
+
+void stm32_device_cache_queue_free(stm32Device* device)
+{
+    if (device != NULL)
+    {
+        for (int i = 0; i < SMAC_STM32_CACHEABLE_PERIPH_NUM; i++)
+        {
+            if (_device_cache_queue[i].device == device)
+            {
+                _device_cache_queue[i].device     = NULL;
+                _device_cache_queue[i].cache_data = 0;
+            }
+        }
+    }
+}
+
+smacRetCode_t stm32_device_cache_queue_set_cache(stm32Device* device,
+                                                 stm32DeviceCacheData cache_data)
+{
+    if (device == NULL)
+    {
+        return SMAC_RET_PARAM_ERR;
+    }
+
+    for (int i = 0; i < SMAC_STM32_CACHEABLE_PERIPH_NUM; i++)
+    {
+        if (_device_cache_queue[i].device == device)
+        {
+            _device_cache_queue[i].cache_data = cache_data;
+            return SMAC_RET_OK;
+        }
+    }
+
+    return SMAC_RET_INSTANCE_NOT_FOUND;
+}
+
+stm32DeviceCache* stm32_device_cache_queue_search(stm32DeviceHandle handle)
+{
+    return stm32_device_cache_queue_search_with_addition(handle, 0);
+}
+
+stm32DeviceCache* stm32_device_cache_queue_search_with_addition(stm32DeviceHandle handle,
+                                                                stm32DeviceAddition addition)
+{
+    if (handle != NULL)
+    {
+        for (int i = 0; i < SMAC_STM32_CACHEABLE_PERIPH_NUM; i++)
+        {
+            if (((_device_cache_queue[i].device->handle == handle) &&
+                 (_device_cache_queue[i].device->addition == addition)) ||
+                ((handle == NULL) && (_device_cache_queue[i].device->addition == addition)))
+            {
+                return &_device_cache_queue[i];
             }
         }
     }
