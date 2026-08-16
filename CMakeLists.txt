@@ -21,6 +21,9 @@ add_library(${CMAKE_PROJECT_NAME} STATIC)
 
 # Add all sub directories
 target_sources(${CMAKE_PROJECT_NAME} PRIVATE source/smac-stm32.c)
+target_sources(${CMAKE_PROJECT_NAME} PRIVATE source/smac-stm32-adc.c)
+target_sources(${CMAKE_PROJECT_NAME} PRIVATE source/smac-stm32-can.c)
+target_sources(${CMAKE_PROJECT_NAME} PRIVATE source/smac-stm32-canfd.c)
 target_sources(${CMAKE_PROJECT_NAME} PRIVATE source/smac-stm32-uart.c)
 target_sources(${CMAKE_PROJECT_NAME} PRIVATE source/stm32-queue.c)
 
