@@ -2,7 +2,7 @@
 
 #include <smac-mcu.h>
 #include <smac-stm32.h>
-#include <stm32-device-queue.h>
+#include <stm32-queue.h>
 
 smacRetCode_t smac_mcu_initialize(void)
 {

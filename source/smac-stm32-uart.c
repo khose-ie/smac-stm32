@@ -1,5 +1,5 @@
 #include <smac-mcu.h>
-#include <stm32-device-queue.h>
+#include <stm32-queue.h>
 #include <stm32.h>
 
 static smacUartEventTxComplete on_tx_complete;

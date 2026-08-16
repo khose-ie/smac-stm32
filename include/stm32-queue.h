@@ -31,7 +31,7 @@ typedef struct
 typedef struct
 {
     stm32Device* device;
-    stm32DeviceCacheData cache_data;
+    stm32DeviceCacheData cache_data[3];
 } stm32DeviceCache;
 
 void stm32_device_queue_initialize(void);
@@ -43,7 +43,7 @@ void stm32_device_queue_free(stm32Device* device);
 void stm32_device_event_queue_initialize(void);
 
 smacRetCode_t stm32_device_event_queue_allocate(stm32Device* device,
-                                                stm32DeviceEventData event_data);
+                                                    stm32DeviceEventData event_data);
 
 void stm32_device_event_queue_free(stm32Device* device);
 
@@ -52,12 +52,11 @@ stm32DeviceEvent* stm32_device_event_queue_search(stm32DeviceHandle handle);
 stm32DeviceEvent* stm32_device_event_queue_search_with_addition(stm32DeviceHandle handle,
                                                                 stm32DeviceAddition addition);
 
-smacRetCode_t stm32_device_cache_queue_allocate(stm32Device* device,
-                                                stm32DeviceCacheData cache_data);
+smacRetCode_t stm32_device_cache_queue_allocate(stm32Device* device);
 
 void stm32_device_cache_queue_free(stm32Device* device);
 
-smacRetCode_t stm32_device_cache_queue_set_cache(stm32Device* device,
+smacRetCode_t stm32_device_cache_queue_set_cache(stm32Device* device, uint32_t index,
                                                  stm32DeviceCacheData cache_data);
 
 stm32DeviceCache* stm32_device_cache_queue_search(stm32DeviceHandle handle);

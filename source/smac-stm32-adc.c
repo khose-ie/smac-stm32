@@ -1,7 +1,7 @@
 #include <smac-mcu.h>
 #include <smac-stm32.h>
 #include <stddef.h>
-#include <stm32-device-queue.h>
+#include <stm32-queue.h>
 #include <stm32.h>
 
 static smacAdcEventConvertComplete on_convert_complete;

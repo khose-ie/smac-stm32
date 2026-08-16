@@ -22,7 +22,7 @@ add_library(${CMAKE_PROJECT_NAME} STATIC)
 # Add all sub directories
 target_sources(${CMAKE_PROJECT_NAME} PRIVATE source/smac-stm32.c)
 target_sources(${CMAKE_PROJECT_NAME} PRIVATE source/smac-stm32-uart.c)
-target_sources(${CMAKE_PROJECT_NAME} PRIVATE source/stm32-device-queue.c)
+target_sources(${CMAKE_PROJECT_NAME} PRIVATE source/stm32-queue.c)
 
 # Add self include path
 target_include_directories(${CMAKE_PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)

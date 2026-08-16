@@ -1,5 +1,5 @@
 #include <smac-stm32.h>
-#include <stm32-device-queue.h>
+#include <stm32-queue.h>
 #include <string.h>
 
 static stm32Device _device_queue[SMAC_STM32_PERIPH_NUM];
@@ -51,7 +51,7 @@ void stm32_device_event_queue_initialize(void)
 }
 
 smacRetCode_t stm32_device_event_queue_allocate(stm32Device* device,
-                                                stm32DeviceEventData event_data)
+                                                    stm32DeviceEventData event_data)
 {
     if ((device == NULL) || (event_data == NULL))
     {
@@ -107,11 +107,14 @@ stm32DeviceEvent* stm32_device_event_queue_search_with_addition(stm32DeviceHandl
     {
         for (int i = 0; i < SMAC_STM32_EVENTABLE_PERIPH_NUM; i++)
         {
-            if (((_device_event_queue[i].device->handle == handle) &&
-                 (_device_event_queue[i].device->addition == addition)) ||
-                ((handle == NULL) && (_device_event_queue[i].device->addition == addition)))
+            if (_device_event_queue[i].device != NULL)
             {
-                return &_device_event_queue[i];
+                if (((_device_event_queue[i].device->handle == handle) &&
+                     (_device_event_queue[i].device->addition == addition)) ||
+                    ((handle == NULL) && (_device_event_queue[i].device->addition == addition)))
+                {
+                    return &_device_event_queue[i];
+                }
             }
         }
     }
@@ -119,8 +122,7 @@ stm32DeviceEvent* stm32_device_event_queue_search_with_addition(stm32DeviceHandl
     return NULL;
 }
 
-smacRetCode_t stm32_device_cache_queue_allocate(stm32Device* device,
-                                                stm32DeviceCacheData cache_data)
+smacRetCode_t stm32_device_cache_queue_allocate(stm32Device* device)
 {
     if (device == NULL)
     {
@@ -131,7 +133,7 @@ smacRetCode_t stm32_device_cache_queue_allocate(stm32Device* device,
     {
         if (_device_cache_queue[i].device == device)
         {
-            _device_cache_queue[i].cache_data = cache_data;
+            // The cache for this device has already been allocated, no need to reinitialize it.
             return SMAC_RET_OK;
         }
     }
@@ -140,8 +142,13 @@ smacRetCode_t stm32_device_cache_queue_allocate(stm32Device* device,
     {
         if (_device_cache_queue[i].device == NULL)
         {
-            _device_cache_queue[i].device     = device;
-            _device_cache_queue[i].cache_data = cache_data;
+            _device_cache_queue[i].device = device;
+
+            for (int j = 0; j < 3; j++)
+            {
+                _device_cache_queue[i].cache_data[j] = 0;
+            }
+
             return SMAC_RET_OK;
         }
     }
@@ -157,14 +164,18 @@ void stm32_device_cache_queue_free(stm32Device* device)
         {
             if (_device_cache_queue[i].device == device)
             {
-                _device_cache_queue[i].device     = NULL;
-                _device_cache_queue[i].cache_data = 0;
+                _device_cache_queue[i].device = NULL;
+
+                for (int j = 0; j < 3; j++)
+                {
+                    _device_cache_queue[i].cache_data[j] = 0;
+                }
             }
         }
     }
 }
 
-smacRetCode_t stm32_device_cache_queue_set_cache(stm32Device* device,
+smacRetCode_t stm32_device_cache_queue_set_cache(stm32Device* device, uint32_t index,
                                                  stm32DeviceCacheData cache_data)
 {
     if (device == NULL)
@@ -176,7 +187,7 @@ smacRetCode_t stm32_device_cache_queue_set_cache(stm32Device* device,
     {
         if (_device_cache_queue[i].device == device)
         {
-            _device_cache_queue[i].cache_data = cache_data;
+            _device_cache_queue[i].cache_data[index] = cache_data;
             return SMAC_RET_OK;
         }
     }
