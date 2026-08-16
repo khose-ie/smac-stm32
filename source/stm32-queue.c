@@ -51,9 +51,9 @@ void stm32_device_event_queue_initialize(void)
 }
 
 smacRetCode_t stm32_device_event_queue_allocate(stm32Device* device,
-                                                    stm32DeviceEventData event_data)
+                                                stm32DeviceEventData event_data)
 {
-    if ((device == NULL) || (event_data == NULL))
+    if (device == NULL)
     {
         return SMAC_RET_PARAM_ERR;
     }
@@ -207,11 +207,14 @@ stm32DeviceCache* stm32_device_cache_queue_search_with_addition(stm32DeviceHandl
     {
         for (int i = 0; i < SMAC_STM32_CACHEABLE_PERIPH_NUM; i++)
         {
-            if (((_device_cache_queue[i].device->handle == handle) &&
-                 (_device_cache_queue[i].device->addition == addition)) ||
-                ((handle == NULL) && (_device_cache_queue[i].device->addition == addition)))
+            if (_device_cache_queue[i].device != NULL)
             {
-                return &_device_cache_queue[i];
+                if (((_device_cache_queue[i].device->handle == handle) &&
+                     (_device_cache_queue[i].device->addition == addition)) ||
+                    ((handle == NULL) && (_device_cache_queue[i].device->addition == addition)))
+                {
+                    return &_device_cache_queue[i];
+                }
             }
         }
     }
