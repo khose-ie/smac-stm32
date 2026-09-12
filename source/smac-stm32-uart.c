@@ -1,32 +1,5 @@
 #include <smac-mcu.h>
-#include <stm32-queue.h>
 #include <stm32.h>
-
-static smacUartEventTxComplete on_tx_complete;
-static smacUartEventRxComplete on_rx_complete;
-static smacUartEventRxSizeComplete on_rx_size_complete;
-static smacUartEventAbort on_abort;
-static smacUartEventError on_error;
-
-smacRetCode_t smac_mcu_set_uart_event(smacUartEventTxComplete on_tx_complete,
-                                      smacUartEventRxComplete on_rx_complete,
-                                      smacUartEventRxSizeComplete on_rx_size_complete,
-                                      smacUartEventAbort on_abort, smacUartEventError on_error)
-{
-    if (on_tx_complete == NULL || on_rx_complete == NULL || on_rx_size_complete == NULL ||
-        on_abort == NULL || on_error == NULL)
-    {
-        return SMAC_RET_PARAM_ERR;
-    }
-
-    on_tx_complete      = on_tx_complete;
-    on_rx_complete      = on_rx_complete;
-    on_rx_size_complete = on_rx_size_complete;
-    on_abort            = on_abort;
-    on_error            = on_error;
-
-    return SMAC_RET_OK;
-}
 
 smacUart_t smac_uart_create(void* handle)
 {
@@ -35,24 +8,29 @@ smacUart_t smac_uart_create(void* handle)
 
 void smac_uart_drop(smacUart_t uart)
 {
-    stm32_device_queue_free((stm32Device*)uart);
-    stm32_device_event_queue_free((stm32Device*)uart);
+    stm32_device_queue_free((stm32Device_t*)uart);
+    stm32_device_event_queue_free((stm32Device_t*)uart);
 }
 
-smacRetCode_t smac_uart_set_event(smacUart_t uart, smacMcuEventData_t event_data)
+smacRetCode_t smac_uart_set_event(smacUart_t uart, smacUartEvent_t* event,
+                                  smacMcuEventData_t event_data)
 {
-    return stm32_device_event_queue_allocate((stm32Device*)uart, event_data);
+    return stm32_device_event_queue_allocate((stm32Device_t*)uart, (stm32DeviceEventHandle_t*)event,
+                                             event_data);
 }
 
 void smac_uart_clean_event(smacUart_t uart)
 {
-    stm32_device_event_queue_free((stm32Device*)uart);
+    if (uart != NULL)
+    {
+        stm32_device_event_queue_free((stm32Device_t*)uart);
+    }
 }
 
 smacRetCode_t smac_uart_transmit(smacUart_t uart, const uint8_t* data, uint32_t size,
                                  uint32_t timeout)
 {
-    stm32Device* device = (stm32Device*)uart;
+    stm32Device_t* device = (stm32Device_t*)uart;
     return (device != NULL) && (device->handle != NULL)
                ? stm32_cast_code(HAL_UART_Transmit(device->handle, data, size, timeout))
                : SMAC_RET_NULL_REF;
@@ -61,7 +39,7 @@ smacRetCode_t smac_uart_transmit(smacUart_t uart, const uint8_t* data, uint32_t 
 smacRetCode_t smac_uart_receive(smacUart_t uart, uint8_t* data, uint32_t size,
                                 uint32_t* received_size, uint32_t timeout)
 {
-    stm32Device* device = (stm32Device*)uart;
+    stm32Device_t* device = (stm32Device_t*)uart;
     return (device != NULL) && (device->handle != NULL)
                ? stm32_cast_code(HAL_UARTEx_ReceiveToIdle(device->handle, data, size,
                                                           (uint16_t*)received_size, timeout))
@@ -71,7 +49,7 @@ smacRetCode_t smac_uart_receive(smacUart_t uart, uint8_t* data, uint32_t size,
 smacRetCode_t smac_uart_receive_size(smacUart_t uart, uint8_t* data, uint32_t size,
                                      uint32_t timeout)
 {
-    stm32Device* device = (stm32Device*)uart;
+    stm32Device_t* device = (stm32Device_t*)uart;
     return (device != NULL) && (device->handle != NULL)
                ? stm32_cast_code(HAL_UART_Receive(device->handle, data, size, timeout))
                : SMAC_RET_NULL_REF;
@@ -79,7 +57,7 @@ smacRetCode_t smac_uart_receive_size(smacUart_t uart, uint8_t* data, uint32_t si
 
 smacRetCode_t smac_uart_async_transmit(smacUart_t uart, const uint8_t* data, uint32_t size)
 {
-    stm32Device* device        = (stm32Device*)uart;
+    stm32Device_t* device      = (stm32Device_t*)uart;
     UART_HandleTypeDef* handle = (UART_HandleTypeDef*)device->handle;
 
     return (device != NULL) && (handle != NULL)
@@ -90,7 +68,7 @@ smacRetCode_t smac_uart_async_transmit(smacUart_t uart, const uint8_t* data, uin
 
 smacRetCode_t smac_uart_async_receive(smacUart_t uart, uint8_t* data, uint32_t size)
 {
-    stm32Device* device        = (stm32Device*)uart;
+    stm32Device_t* device      = (stm32Device_t*)uart;
     UART_HandleTypeDef* handle = (UART_HandleTypeDef*)device->handle;
 
     return (device != NULL) && (handle != NULL)
@@ -102,7 +80,7 @@ smacRetCode_t smac_uart_async_receive(smacUart_t uart, uint8_t* data, uint32_t s
 
 smacRetCode_t smac_uart_async_receive_size(smacUart_t uart, uint8_t* data, uint32_t size)
 {
-    stm32Device* device        = (stm32Device*)uart;
+    stm32Device_t* device      = (stm32Device_t*)uart;
     UART_HandleTypeDef* handle = (UART_HandleTypeDef*)device->handle;
 
     return (device != NULL) && (handle != NULL)
@@ -113,7 +91,7 @@ smacRetCode_t smac_uart_async_receive_size(smacUart_t uart, uint8_t* data, uint3
 
 smacRetCode_t smac_uart_async_abort(smacUart_t uart)
 {
-    stm32Device* device = (stm32Device*)uart;
+    stm32Device_t* device = (stm32Device_t*)uart;
     return (device != NULL) && (device->handle != NULL)
                ? stm32_cast_code(HAL_UART_Abort(device->handle))
                : SMAC_RET_NULL_REF;
@@ -130,16 +108,12 @@ smacRetCode_t smac_uart_async_abort(smacUart_t uart)
 /// @retval None
 void HAL_UART_TxCpltCallback(UART_HandleTypeDef* huart)
 {
-    stm32DeviceEvent* event = NULL;
+    stm32DeviceEvent_t* event = stm32_device_event_queue_search((stm32Device_t*)huart);
 
-    if (on_tx_complete != NULL)
+    if ((event != NULL) && (event->event != NULL) && (event->event->uart.tx_complete != NULL))
     {
-        event = stm32_device_event_queue_search((stm32Device*)huart);
-
-        if (event != NULL)
-        {
-            on_tx_complete((smacUart_t)event->device, (smacMcuEventData_t)event->event_data);
-        }
+        event->event->uart.tx_complete((smacUart_t)event->device,
+                                       (smacMcuEventData_t)event->event_data);
     }
 }
 
@@ -155,16 +129,12 @@ void HAL_UART_TxCpltCallback(UART_HandleTypeDef* huart)
 /// @retval None
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef* huart)
 {
-    stm32DeviceEvent* event = NULL;
+    stm32DeviceEvent_t* event = stm32_device_event_queue_search((stm32Device_t*)huart);
 
-    if (on_rx_size_complete != NULL)
+    if ((event != NULL) && (event->event != NULL) && (event->event->uart.rx_size_complete != NULL))
     {
-        event = stm32_device_event_queue_search((stm32Device*)huart);
-
-        if (event != NULL)
-        {
-            on_rx_size_complete((smacUart_t)event->device, (smacMcuEventData_t)event->event_data);
-        }
+        event->event->uart.rx_size_complete((smacUart_t)event->device,
+                                            (smacMcuEventData_t)event->event_data);
     }
 }
 
@@ -180,17 +150,12 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef* huart)
 /// @retval None
 void HAL_UART_ErrorCallback(UART_HandleTypeDef* huart)
 {
-    stm32DeviceEvent* event = NULL;
+    stm32DeviceEvent_t* event = stm32_device_event_queue_search((stm32Device_t*)huart);
 
-    if (on_error != NULL)
+    if ((event != NULL) && (event->event != NULL) && (event->event->uart.error != NULL))
     {
-        event = stm32_device_event_queue_search((stm32Device*)huart);
-
-        if (event != NULL)
-        {
-            on_error((smacUart_t)event->device, (smacMcuEventData_t)event->event_data,
-                     huart->ErrorCode);
-        }
+        event->event->uart.error((smacUart_t)event->device, (smacMcuEventData_t)event->event_data,
+                                 huart->ErrorCode);
     }
 }
 
@@ -199,16 +164,12 @@ void HAL_UART_ErrorCallback(UART_HandleTypeDef* huart)
 /// @retval None
 void HAL_UART_AbortCpltCallback(UART_HandleTypeDef* huart)
 {
-    stm32DeviceEvent* event = NULL;
+    stm32DeviceEvent_t* event = stm32_device_event_queue_search((stm32Device_t*)huart);
 
-    if (on_abort != NULL)
+    if ((event != NULL) && (event->event != NULL) && (event->event->uart.abort_complete != NULL))
     {
-        event = stm32_device_event_queue_search((stm32Device*)huart);
-
-        if (event != NULL)
-        {
-            on_abort((smacUart_t)event->device, (smacMcuEventData_t)event->event_data);
-        }
+        event->event->uart.abort_complete((smacUart_t)event->device,
+                                          (smacMcuEventData_t)event->event_data);
     }
 }
 
@@ -230,15 +191,11 @@ void HAL_UART_AbortCpltCallback(UART_HandleTypeDef* huart)
 /// @retval None
 void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef* huart, uint16_t Size)
 {
-    stm32DeviceEvent* event = NULL;
+    stm32DeviceEvent_t* event = stm32_device_event_queue_search((stm32Device_t*)huart);
 
-    if (on_rx_complete != NULL)
+    if ((event != NULL) && (event->event != NULL) && (event->event->uart.rx_complete != NULL))
     {
-        event = stm32_device_event_queue_search((stm32Device*)huart);
-
-        if (event != NULL)
-        {
-            on_rx_complete((smacUart_t)event->device, (smacMcuEventData_t)event->event_data, Size);
-        }
+        event->event->uart.rx_complete((smacUart_t)event->device,
+                                       (smacMcuEventData_t)event->event_data, Size);
     }
 }

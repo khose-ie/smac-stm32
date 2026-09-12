@@ -1,16 +1,12 @@
 #include <smac-mcu.h>
 #include <smac-stm32.h>
-#include <stm32-queue.h>
+#include <stm32-can.h>
 #include <stm32.h>
 #include <string.h>
 
 #if defined(STM32H5) || defined(STM32C5)
-#define STM32_CAN_FD
+#define STM32_CAN_FD_AS_CLASSIC
 #endif // defined(STM32H5)
-
-#ifndef STM32_CAN_FD
-#define STM32_CAN_CLASSIC
-#endif // STM32_CAN_FD
 
 #define cast_to_stm32_rtr(request_kind)                                                            \
     ((request_kind == SMAC_CAN_DATA) ? CAN_RTR_DATA : CAN_RTR_REMOTE)
@@ -24,28 +20,19 @@
 #define cast_from_stm32_ide(frame_kind)                                                            \
     ((frame_kind == CAN_ID_STD) ? SMAC_CAN_FRAME_STANDARD : SMAC_CAN_FRAME_EXTENDED)
 
-static smacCanEventTxComplete _on_tx_complete    = NULL;
-static smacCanEventRxComplete _on_rx_complete[2] = { NULL, NULL };
-
-smacRetCode_t set_can_classic_event(smacCanEventTxComplete on_tx_complete,
-                                    smacCanEventRxComplete on_rx_complete0,
-                                    smacCanEventRxComplete on_rx_complete1)
-{
-    _on_tx_complete    = on_tx_complete;
-    _on_rx_complete[0] = on_rx_complete0;
-    _on_rx_complete[1] = on_rx_complete1;
-
-    return SMAC_RET_OK;
-}
-
-#ifdef STM32_CAN_CLASSIC
+/// ===============================================================================================
+/// @defgroup can_classic_low_level Classic CAN Low-Level Interface
+/// @brief Low-level interface for handling classic CAN instances on STM32 MCUs.
+/// ===============================================================================================
+    
+#ifndef STM32_CAN_FD_AS_CLASSIC
 
 /// @brief Create a classic CAN instance within the MCU abstraction layer.
 /// @details The specific implementation of @ref smac_can_create for classic CAN instances.
 static smacCan_t can_classic_create(void* handle)
 {
     // Allocate a device from the STM32 device queue for the classic CAN instance.
-    stm32Device* device = stm32_device_queue_allocate(handle, 0);
+    stm32Device_t* device = stm32_device_queue_allocate(handle, 0);
 
     if (device == NULL)
     {
@@ -55,6 +42,7 @@ static smacCan_t can_classic_create(void* handle)
     if (stm32_device_cache_queue_allocate(device) != SMAC_RET_OK)
     {
         stm32_device_queue_free(device);
+        return NULL;
     }
 
     return (smacCan_t)device;
@@ -66,18 +54,21 @@ static void can_classic_drop(smacCan_t can)
 {
     if (can != NULL)
     {
-        stm32_device_event_queue_free((stm32Device*)can);
-        stm32_device_cache_queue_free((stm32Device*)can);
-        stm32_device_queue_free((stm32Device*)can);
+        stm32_device_event_queue_free((stm32Device_t*)can);
+        stm32_device_cache_queue_free((stm32Device_t*)can);
+        stm32_device_queue_free((stm32Device_t*)can);
     }
 }
 
 /// @brief Set an event for a classic CAN instance within the MCU abstraction layer.
 /// @details The specific implementation of @ref smac_can_set_event for classic CAN instances.
-static smacRetCode_t can_classic_set_event(smacCan_t can, smacMcuEventData_t data)
+static smacRetCode_t can_classic_set_event(smacCan_t can, smacCanEvent_t* event,
+                                           smacMcuEventData_t data)
 {
-    stm32Device* device = (stm32Device*)can;
-    return device != NULL ? stm32_device_event_queue_allocate(device, data) : SMAC_RET_NULL_REF;
+    stm32Device_t* device = (stm32Device_t*)can;
+    return device != NULL
+               ? stm32_device_event_queue_allocate(device, (stm32DeviceEventHandle_t*)event, data)
+               : SMAC_RET_NULL_REF;
 }
 
 /// @brief Clean events for a classic CAN instance within the MCU abstraction layer.
@@ -86,7 +77,7 @@ static void can_classic_clean_event(smacCan_t can)
 {
     if (can != NULL)
     {
-        stm32_device_event_queue_free((stm32Device*)can);
+        stm32_device_event_queue_free((stm32Device_t*)can);
     }
 }
 
@@ -94,7 +85,7 @@ static void can_classic_clean_event(smacCan_t can)
 /// @details The specific implementation of @ref smac_can_active for classic CAN instances.
 static smacRetCode_t can_classic_active(smacCan_t can)
 {
-    stm32Device* device = (stm32Device*)can;
+    stm32Device_t* device = (stm32Device_t*)can;
     return (device != NULL) && (device->handle != NULL)
                ? stm32_cast_code(HAL_CAN_Start(device->handle))
                : SMAC_RET_NULL_REF;
@@ -104,7 +95,7 @@ static smacRetCode_t can_classic_active(smacCan_t can)
 /// @details The specific implementation of @ref smac_can_deactive for classic CAN instances.
 static smacRetCode_t can_classic_deactive(smacCan_t can)
 {
-    stm32Device* device = (stm32Device*)can;
+    stm32Device_t* device = (stm32Device_t*)can;
     return (device != NULL) && (device->handle != NULL)
                ? stm32_cast_code(HAL_CAN_Stop(device->handle))
                : SMAC_RET_NULL_REF;
@@ -116,7 +107,7 @@ static smacRetCode_t can_classic_transmit(smacCan_t can, const smacCanMessage* m
                                           uint32_t timeout)
 {
     CAN_TxHeaderTypeDef head;
-    stm32Device* device = (stm32Device*)can;
+    stm32Device_t* device = (stm32Device_t*)can;
 
     if ((device == NULL) || (device->handle == NULL) || (message == NULL))
     {
@@ -170,7 +161,7 @@ static smacRetCode_t can_classic_receive(smacCan_t can, uint32_t channel, smacCa
                                          uint32_t timeout)
 {
     CAN_RxHeaderTypeDef head;
-    stm32Device* device = (stm32Device*)can;
+    stm32Device_t* device = (stm32Device_t*)can;
 
     uint32_t start_tick = HAL_GetTick();
 
@@ -221,7 +212,7 @@ static smacRetCode_t can_classic_receive_channel1(smacCan_t can, smacCanMessage*
 static smacRetCode_t can_classic_async_transmit(smacCan_t can, const smacCanMessage* message)
 {
     CAN_TxHeaderTypeDef head;
-    stm32Device* device = (stm32Device*)can;
+    stm32Device_t* device = (stm32Device_t*)can;
 
     if ((device == NULL) || (device->handle == NULL) || (message == NULL))
     {
@@ -251,7 +242,7 @@ static smacRetCode_t can_classic_async_transmit(smacCan_t can, const smacCanMess
 static smacRetCode_t can_classic_async_receive(smacCan_t can, uint32_t channel,
                                                smacCanMessage* message)
 {
-    stm32Device* device = (stm32Device*)can;
+    stm32Device_t* device = (stm32Device_t*)can;
 
     if ((device == NULL) || (device->handle == NULL) || (message == NULL))
     {
@@ -265,7 +256,7 @@ static smacRetCode_t can_classic_async_receive(smacCan_t can, uint32_t channel,
         return SMAC_RET_STACK_OVERFLOW;
     }
 
-    return stm32_device_cache_queue_set_cache(device, channel, (stm32DeviceCacheData)message);
+    return stm32_device_cache_queue_set_cache(device, channel, (stm32DeviceCacheData_t)message);
 }
 
 /// @brief Asynchronously receive a classic CAN message from channel 0 using the specified classic
@@ -286,109 +277,61 @@ static smacRetCode_t can_classic_async_receive_channel1(smacCan_t can, smacCanMe
     return can_classic_async_receive(can, 1, message);
 }
 
-#else // defined(STM32_CAN_FD)
+#endif // STM32_CAN_FD_AS_CLASSIC
 
-static smacCanMessage* can_message[2];
-static smacCanFdMessage can_fd_message[2];
-
-static void _on_fd_tx_complete(smacCan_t can, smacMcuEventData_t event_data)
-{
-    if (_on_tx_complete != NULL)
-    {
-        _on_tx_complete(can, event_data);
-    }
-}
-
-static void _on_fd_rx_complete(smacCan_t can, uint32_t channel, smacMcuEventData_t event_data)
-{
-    if (_on_rx_complete[channel] != NULL)
-    {
-        can_message[channel]->head.ident        = can_fd_message[channel].head.ident;
-        can_message[channel]->head.frame_kind   = can_fd_message[channel].head.frame_kind;
-        can_message[channel]->head.request_kind = can_fd_message[channel].head.request_kind;
-        can_message[channel]->head.data_length  = can_fd_message[channel].head.data_length;
-
-        smac_can_message_set_data(can_message[channel], can_fd_message[channel].data);
-
-        _on_rx_complete[channel](can, event_data);
-    }
-}
-
-static void _on_fd_rx_complete0(smacCan_t can, smacMcuEventData_t event_data)
-{
-    _on_fd_rx_complete(can, 0, event_data);
-}
-
-static void _on_fd_rx_complete1(smacCan_t can, smacMcuEventData_t event_data)
-{
-    _on_fd_rx_complete(can, 1, event_data);
-}
-
-#endif // STM32_CAN_CLASSIC
-
-/// @brief Set CAN event callbacks for the MCU abstraction layer.
-/// @param on_rx_complete Callback for reception complete event.
-/// @return @ref SMAC_RET_OK if the callbacks are set successfully, otherwise an error code.
-smacRetCode_t smac_mcu_set_can_event(smacCanEventTxComplete on_tx_complete,
-                                     smacCanEventRxComplete on_rx_complete0,
-                                     smacCanEventRxComplete on_rx_complete1)
-{
-#if defined(STM32_CAN_CLASSIC)
-
-    return set_can_classic_event(on_tx_complete, on_rx_complete0, on_rx_complete1);
-
-#else // defined(STM32_CAN_FD)
-
-    set_can_classic_event(on_tx_complete, on_rx_complete0, on_rx_complete1);
-    return smac_mcu_set_can_fd_event(_on_fd_tx_complete, _on_fd_rx_complete0, _on_fd_rx_complete1);
-
-#endif // STM32_CAN_CLASSIC
-}
+/// ===============================================================================================
+/// @name CAN interface
+/// @brief Implementation of CAN interface functions for handling various CAN events.
+/// @details This section provides the implementation of the CAN interface functions for the STM32
+/// platform.
+/// @note Some platform don't have a classic CAN interface and only support CAN FD, use CAN FD
+/// interface to implement CAN functionality.
+/// ===============================================================================================
 
 /// @brief Create a CAN instance within the MCU abstraction layer.
 /// @details Implement the creation API of smac mcu, please see @ref smac_can_create for details.
 smacCan_t smac_can_create(void* handle)
 {
-#if defined(STM32_CAN_CLASSIC)
+#if !defined(STM32_CAN_FD_AS_CLASSIC)
 
     return can_classic_create(handle);
 
-#else // defined(STM32_CAN_FD)
+#else // defined(STM32_CAN_FD_AS_CLASSIC)
 
     return smac_can_fd_create(handle);
 
-#endif // STM32_CAN_CLASSIC
+#endif // STM32_CAN_FD_AS_CLASSIC
 }
 
 /// @brief Drop a CAN instance within the MCU abstraction layer.
 /// @details Implement the dropping API of smac mcu, please see @ref smac_can_drop for details.
 void smac_can_drop(smacCan_t can)
 {
-#if defined(STM32_CAN_CLASSIC)
+#if !defined(STM32_CAN_FD_AS_CLASSIC)
 
     can_classic_drop(can);
 
-#else // defined(STM32_CAN_FD)
+#else // defined(STM32_CAN_FD_AS_CLASSIC)
 
     smac_can_fd_drop(can);
 
-#endif // STM32_CAN_CLASSIC
+#endif // STM32_CAN_FD_AS_CLASSIC
 }
 
 /// @brief Implement the setting of CAN event callbacks for the specified CAN instance within the
 /// MCU abstraction layer.
 /// @details Implement the setting API of smac mcu, please see @ref smac_can_set_event for details.
-smacRetCode_t smac_can_set_event(smacCan_t can, smacMcuEventData_t data)
+smacRetCode_t smac_can_set_event(smacCan_t can, smacCanEvent_t* event, smacMcuEventData_t data)
 {
-#if defined(STM32_CAN_CLASSIC)
+#if !defined(STM32_CAN_FD_AS_CLASSIC)
 
-    return can_classic_set_event(can, data);
+    return can_classic_set_event(can, event, data);
 
-#else // defined(STM32_CAN_FD)
+#else // defined(STM32_CAN_FD_AS_CLASSIC)
 
-    return smac_can_fd_set_event(can, data);
+    return smac_can_fd_set_event_classic(can, event, data);
 
-#endif // STM32_CAN_CLASSIC
+#endif // STM32_CAN_FD_AS_CLASSIC
 }
 
 /// @brief Clean CAN event callbacks for the specified CAN instance.
@@ -396,30 +339,30 @@ smacRetCode_t smac_can_set_event(smacCan_t can, smacMcuEventData_t data)
 /// details.
 void smac_can_clean_event(smacCan_t can)
 {
-#if defined(STM32_CAN_CLASSIC)
+#if !defined(STM32_CAN_FD_AS_CLASSIC)
 
     can_classic_clean_event(can);
 
-#else // defined(STM32_CAN_FD)
+#else // defined(STM32_CAN_FD_AS_CLASSIC)
 
     smac_can_fd_clean_event(can);
 
-#endif // STM32_CAN_CLASSIC
+#endif // STM32_CAN_FD_AS_CLASSIC
 }
 
 /// @brief Activate a CAN instance within the MCU abstraction layer.
 /// @details Implement the activation API of smac mcu, please see @ref smac_can_active for details.
 smacRetCode_t smac_can_active(smacCan_t can)
 {
-#if defined(STM32_CAN_CLASSIC)
+#if !defined(STM32_CAN_FD_AS_CLASSIC)
 
     return can_classic_active(can);
 
-#else // defined(STM32_CAN_FD)
+#else // defined(STM32_CAN_FD_AS_CLASSIC)
 
     return smac_can_fd_active(can);
 
-#endif // STM32_CAN_CLASSIC
+#endif // STM32_CAN_FD_AS_CLASSIC
 }
 
 /// @brief Deactivate a CAN instance within the MCU abstraction layer.
@@ -427,15 +370,15 @@ smacRetCode_t smac_can_active(smacCan_t can)
 /// details.
 smacRetCode_t smac_can_deactive(smacCan_t can)
 {
-#if defined(STM32_CAN_CLASSIC)
+#if !defined(STM32_CAN_FD_AS_CLASSIC)
 
     return can_classic_deactive(can);
 
-#else // defined(STM32_CAN_FD)
+#else // defined(STM32_CAN_FD_AS_CLASSIC)
 
     return smac_can_fd_deactive(can);
 
-#endif // STM32_CAN_CLASSIC
+#endif // STM32_CAN_FD_AS_CLASSIC
 }
 
 /// @brief Transmit a message over the specified CAN instance.
@@ -443,27 +386,15 @@ smacRetCode_t smac_can_deactive(smacCan_t can)
 /// details.
 smacRetCode_t smac_can_transmit(smacCan_t can, const smacCanMessage* message, uint32_t timeout)
 {
-#if defined(STM32_CAN_CLASSIC)
+#if !defined(STM32_CAN_FD_AS_CLASSIC)
 
     return can_classic_transmit(can, message, timeout);
 
-#else // defined(STM32_CAN_FD)
+#else // defined(STM32_CAN_FD_AS_CLASSIC)
 
-    smacCanFdMessage can_fd_message;
+    return smac_can_fd_transmit_classic(can, message, timeout);
 
-    can_fd_message.head.ident           = message->head.ident;
-    can_fd_message.head.frame_kind      = message->head.frame_kind;
-    can_fd_message.head.request_kind    = message->head.request_kind;
-    can_fd_message.head.data_length     = message->head.data_length;
-    can_fd_message.head.format          = SMAC_CAN_CLASSIC;
-    can_fd_message.head.error_state     = SMAC_CAN_ERROR_ACTIVE;
-    can_fd_message.head.switch_bit_rate = false;
-
-    smac_can_fd_message_set_data(&can_fd_message, message->data);
-
-    return smac_can_fd_transmit(can, &can_fd_message, timeout);
-
-#endif // STM32_CAN_CLASSIC
+#endif // STM32_CAN_FD_AS_CLASSIC
 }
 
 /// @brief Receive a message from channel 0 of the specified CAN instance.
@@ -471,58 +402,30 @@ smacRetCode_t smac_can_transmit(smacCan_t can, const smacCanMessage* message, ui
 /// smac_can_receive_channel0 for details.
 smacRetCode_t smac_can_receive_channel0(smacCan_t can, smacCanMessage* message, uint32_t timeout)
 {
-#if defined(STM32_CAN_CLASSIC)
+#if !defined(STM32_CAN_FD_AS_CLASSIC)
 
     return can_classic_receive_channel0(can, message, timeout);
 
-#else // defined(STM32_CAN_FD)
+#else // defined(STM32_CAN_FD_AS_CLASSIC)
 
-    smacCanFdMessage can_fd_message;
+    return smac_can_fd_receive_channel0_classic(can, message, timeout);
 
-    smacRetCode_t code = smac_can_fd_receive_channel0(can, &can_fd_message, timeout);
-
-    if (code == SMAC_RET_OK)
-    {
-        message->head.ident        = can_fd_message.head.ident;
-        message->head.frame_kind   = can_fd_message.head.frame_kind;
-        message->head.request_kind = can_fd_message.head.request_kind;
-        message->head.data_length  = can_fd_message.head.data_length;
-
-        smac_can_message_set_data(message, can_fd_message.data);
-    }
-
-    return code;
-
-#endif // STM32_CAN_CLASSIC
+#endif // STM32_CAN_FD_AS_CLASSIC
 }
 /// @brief Receive a message from channel 1 of the specified CAN instance.
 /// @details Implement the reception API of smac mcu for channel 1, please see @ref
 /// smac_can_receive_channel1 for details.
 smacRetCode_t smac_can_receive_channel1(smacCan_t can, smacCanMessage* message, uint32_t timeout)
 {
-#if defined(STM32_CAN_CLASSIC)
+#if !defined(STM32_CAN_FD_AS_CLASSIC)
 
     return can_classic_receive_channel1(can, message, timeout);
 
-#else // defined(STM32_CAN_FD)
+#else // defined(STM32_CAN_FD_AS_CLASSIC)
 
-    smacCanFdMessage can_fd_message;
+    return smac_can_fd_receive_channel1_classic(can, message, timeout);
 
-    smacRetCode_t code = smac_can_fd_receive_channel1(can, &can_fd_message, timeout);
-
-    if (code == SMAC_RET_OK)
-    {
-        message->head.ident        = can_fd_message.head.ident;
-        message->head.frame_kind   = can_fd_message.head.frame_kind;
-        message->head.request_kind = can_fd_message.head.request_kind;
-        message->head.data_length  = can_fd_message.head.data_length;
-
-        smac_can_message_set_data(message, can_fd_message.data);
-    }
-
-    return code;
-
-#endif // STM32_CAN_CLASSIC
+#endif // STM32_CAN_FD_AS_CLASSIC
 }
 
 /// @brief Asynchronously transmit a message over the specified CAN instance.
@@ -530,27 +433,15 @@ smacRetCode_t smac_can_receive_channel1(smacCan_t can, smacCanMessage* message, 
 /// smac_can_async_transmit for details.
 smacRetCode_t smac_can_async_transmit(smacCan_t can, const smacCanMessage* message)
 {
-#if defined(STM32_CAN_CLASSIC)
+#if !defined(STM32_CAN_FD_AS_CLASSIC)
 
     return can_classic_async_transmit(can, message);
 
-#else // defined(STM32_CAN_FD)
+#else // defined(STM32_CAN_FD_AS_CLASSIC)
 
-    smacCanFdMessage can_fd_message;
+    return smac_can_fd_async_transmit_classic(can, message);
 
-    can_fd_message.head.ident           = message->head.ident;
-    can_fd_message.head.frame_kind      = message->head.frame_kind;
-    can_fd_message.head.request_kind    = message->head.request_kind;
-    can_fd_message.head.data_length     = message->head.data_length;
-    can_fd_message.head.format          = SMAC_CAN_CLASSIC;
-    can_fd_message.head.error_state     = SMAC_CAN_ERROR_ACTIVE;
-    can_fd_message.head.switch_bit_rate = false;
-
-    smac_can_fd_message_set_data(&can_fd_message, message->data);
-
-    return smac_can_fd_async_transmit(can, &can_fd_message);
-
-#endif // STM32_CAN_CLASSIC
+#endif // STM32_CAN_FD_AS_CLASSIC
 }
 
 /// @brief Asynchronously receive a message over channel 0 of the specified CAN instance.
@@ -558,16 +449,15 @@ smacRetCode_t smac_can_async_transmit(smacCan_t can, const smacCanMessage* messa
 /// smac_can_async_receive_channel0 for details.
 smacRetCode_t smac_can_async_receive_channel0(smacCan_t can, smacCanMessage* message)
 {
-#if defined(STM32_CAN_CLASSIC)
+#if !defined(STM32_CAN_FD_AS_CLASSIC)
 
     return can_classic_async_receive_channel0(can, message);
 
-#else // defined(STM32_CAN_FD)
+#else // defined(STM32_CAN_FD_AS_CLASSIC)
 
-    can_message[0] = message;
-    return smac_can_fd_async_receive_channel0(can, &can_fd_message[0]);
+    return smac_can_fd_async_receive_channel0_classic(can, message);
 
-#endif // STM32_CAN_CLASSIC
+#endif // STM32_CAN_FD_AS_CLASSIC
 }
 
 /// @brief Asynchronously receive a message over channel 1 of the specified CAN instance.
@@ -575,28 +465,27 @@ smacRetCode_t smac_can_async_receive_channel0(smacCan_t can, smacCanMessage* mes
 /// smac_can_async_receive_channel1 for details.
 smacRetCode_t smac_can_async_receive_channel1(smacCan_t can, smacCanMessage* message)
 {
-#if defined(STM32_CAN_CLASSIC)
+#if !defined(STM32_CAN_FD_AS_CLASSIC)
 
     return can_classic_async_receive_channel1(can, message);
 
-#else // defined(STM32_CAN_FD)
+#else // defined(STM32_CAN_FD_AS_CLASSIC)
 
-    can_message[1] = message;
-    return smac_can_fd_async_receive_channel1(can, &can_fd_message[1]);
+    return smac_can_fd_async_receive_channel1_classic(can, message);
 
-#endif // STM32_CAN_CLASSIC
+#endif // STM32_CAN_FD_AS_CLASSIC
 }
 
 /// ===============================================================================================
-/// @name ADC Callback Implementations
-/// @brief Implementation of ADC callback functions for handling various ADC events.
+/// @name CAN Callback Implementations
+/// @brief Implementation of CAN callback functions for handling various CAN events.
 /// ===============================================================================================
 
-#ifdef STM32_CAN_CLASSIC
+#if !defined(STM32_CAN_FD_AS_CLASSIC)
 
 static void on_rx_fifo_msg_pending_callback(CAN_HandleTypeDef* hcan, uint32_t fifo)
 {
-    stm32DeviceCache* cache = stm32_device_cache_queue_search(hcan);
+    stm32DeviceCache_t* cache = stm32_device_cache_queue_search(hcan);
 
     if ((cache == NULL) || (cache->cache_data[fifo] == (uintptr_t)NULL))
     {
@@ -611,31 +500,21 @@ static void on_rx_fifo_msg_pending_callback(CAN_HandleTypeDef* hcan, uint32_t fi
         return;
     }
 
-    if (_on_rx_complete[fifo] != NULL)
+    stm32DeviceEvent_t* event = stm32_device_event_queue_search(hcan);
+
+    if ((event != NULL) && (event->event != NULL) && (event->event->can.rx_complete != NULL))
     {
-        stm32DeviceEvent* event = stm32_device_event_queue_search(hcan);
-
-        if (event == NULL)
-        {
-            return;
-        }
-
-        _on_rx_complete[fifo](event->device, event->event_data);
+        event->event->can.rx_complete(event->device, event->event_data);
     }
 }
 
 void HAL_CAN_TxMailbox0CompleteCallback(CAN_HandleTypeDef* hcan)
 {
-    if (_on_tx_complete != NULL)
+    stm32DeviceEvent_t* event = stm32_device_event_queue_search(hcan);
+
+    if ((event != NULL) && (event->event != NULL) && (event->event->can.tx_complete != NULL))
     {
-        stm32DeviceEvent* event = stm32_device_event_queue_search(hcan);
-
-        if (event == NULL)
-        {
-            return;
-        }
-
-        _on_tx_complete(event->device, event->event_data);
+        event->event->can.tx_complete(event->device, event->event_data);
     }
 }
 
@@ -669,4 +548,4 @@ void HAL_CAN_RxFifo1MsgPendingCallback(CAN_HandleTypeDef* hcan)
 // void HAL_CAN_SleepCallback(CAN_HandleTypeDef *hcan);
 // void HAL_CAN_WakeUpFromRxMsgCallback(CAN_HandleTypeDef *hcan);
 
-#endif // STM32_CAN_CLASSIC
+#endif // STM32_CAN_FD_AS_CLASSIC

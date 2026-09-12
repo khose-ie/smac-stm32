@@ -24,8 +24,8 @@ target_sources(${CMAKE_PROJECT_NAME} PRIVATE source/smac-stm32.c)
 target_sources(${CMAKE_PROJECT_NAME} PRIVATE source/smac-stm32-adc.c)
 target_sources(${CMAKE_PROJECT_NAME} PRIVATE source/smac-stm32-can.c)
 target_sources(${CMAKE_PROJECT_NAME} PRIVATE source/smac-stm32-canfd.c)
+# target_sources(${CMAKE_PROJECT_NAME} PRIVATE source/smac-stm32-flash.c)
 target_sources(${CMAKE_PROJECT_NAME} PRIVATE source/smac-stm32-uart.c)
-target_sources(${CMAKE_PROJECT_NAME} PRIVATE source/stm32-queue.c)
 
 # Add self include path
 target_include_directories(${CMAKE_PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
