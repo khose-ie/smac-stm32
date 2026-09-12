@@ -105,7 +105,7 @@ smacRetCode_t smac_uart_async_abort(smacUart_t uart)
 /// @retval None
 void HAL_UART_TxCpltCallback(UART_HandleTypeDef* huart)
 {
-    stm32DeviceEvent_t* event = stm32_device_event_queue_search((stm32Device_t*)huart);
+    stm32DeviceEvent_t* event = stm32_device_event_queue_search((stm32DeviceHandle_t*)huart);
 
     if ((event != NULL) && (event->event != NULL) && (event->event->uart.tx_complete != NULL))
     {
@@ -126,7 +126,7 @@ void HAL_UART_TxCpltCallback(UART_HandleTypeDef* huart)
 /// @retval None
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef* huart)
 {
-    stm32DeviceEvent_t* event = stm32_device_event_queue_search((stm32Device_t*)huart);
+    stm32DeviceEvent_t* event = stm32_device_event_queue_search((stm32DeviceHandle_t*)huart);
 
     if ((event != NULL) && (event->event != NULL) && (event->event->uart.rx_size_complete != NULL))
     {
@@ -147,7 +147,7 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef* huart)
 /// @retval None
 void HAL_UART_ErrorCallback(UART_HandleTypeDef* huart)
 {
-    stm32DeviceEvent_t* event = stm32_device_event_queue_search((stm32Device_t*)huart);
+    stm32DeviceEvent_t* event = stm32_device_event_queue_search((stm32DeviceHandle_t*)huart);
 
     if ((event != NULL) && (event->event != NULL) && (event->event->uart.error != NULL))
     {
@@ -161,7 +161,7 @@ void HAL_UART_ErrorCallback(UART_HandleTypeDef* huart)
 /// @retval None
 void HAL_UART_AbortCpltCallback(UART_HandleTypeDef* huart)
 {
-    stm32DeviceEvent_t* event = stm32_device_event_queue_search((stm32Device_t*)huart);
+    stm32DeviceEvent_t* event = stm32_device_event_queue_search((stm32DeviceHandle_t*)huart);
 
     if ((event != NULL) && (event->event != NULL) && (event->event->uart.abort_complete != NULL))
     {
@@ -188,7 +188,7 @@ void HAL_UART_AbortCpltCallback(UART_HandleTypeDef* huart)
 /// @retval None
 void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef* huart, uint16_t Size)
 {
-    stm32DeviceEvent_t* event = stm32_device_event_queue_search((stm32Device_t*)huart);
+    stm32DeviceEvent_t* event = stm32_device_event_queue_search((stm32DeviceHandle_t*)huart);
 
     if ((event != NULL) && (event->event != NULL) && (event->event->uart.rx_complete != NULL))
     {
