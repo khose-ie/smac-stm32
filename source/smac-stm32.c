@@ -77,6 +77,13 @@ smacRetCode_t smac_mcu_initialize(void)
     return SMAC_RET_OK;
 }
 
+/// @brief Introduce a delay for the specified number of milliseconds.
+/// @details This function introduces a blocking delay for the specified number of milliseconds.
+void smac_mcu_delay(uint32_t milliseconds)
+{
+    HAL_Delay(milliseconds);
+}
+
 /// @brief Initialize the device queue with the specified number of devices.
 /// @details This function initializes the device queue by setting all device entries to zero.
 void stm32_device_queue_initialize(void)
