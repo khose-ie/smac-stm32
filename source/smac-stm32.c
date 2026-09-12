@@ -348,7 +348,8 @@ stm32DeviceCache_t* stm32_device_cache_queue_search_with_addition(stm32DeviceHan
     {
         if (cache->device != NULL)
         {
-            if (((cache->device->handle == handle) && (cache->device->addition == addition)) ||
+            if (((cache->device->handle == handle) &&
+                 ((cache->device->addition == 0) || (cache->device->addition == addition))) ||
                 ((handle == NULL) && (addition != 0) && (cache->device->addition == addition)))
             {
                 return cache;
