@@ -295,7 +295,7 @@ smacCan_t smac_can_create(void* handle)
 
 #else // defined(STM32_CAN_FD_AS_CLASSIC)
 
-    return smac_can_fd_create(handle);
+    return smac_can_fd_create_classic(handle);
 
 #endif // STM32_CAN_FD_AS_CLASSIC
 }

@@ -4,8 +4,9 @@
 #include <stm32.h>
 #include <string.h>
 
-#define CAN_FD_ADDITION_CLASSIC (0x00 << 31)
-#define CAN_FD_ADDITION_FD      (0x01 << 31)
+#define CAN_FD_ROLE_MASK    (0x80000000)
+#define CAN_FD_ROLE_FD      (0x00000000)
+#define CAN_FD_ROLE_CLASSIC (0x80000000)
 
 #define cast_to_stm32_id_type(frame_kind)                                                          \
     ((frame_kind == SMAC_CAN_FRAME_STANDARD) ? FDCAN_STANDARD_ID : FDCAN_EXTENDED_ID)
@@ -44,7 +45,7 @@
 smacCanFd_t smac_can_fd_create(void* handle)
 {
     // Allocate a device from the STM32 device queue for the classic CAN instance.
-    stm32Device_t* device = stm32_device_queue_allocate(handle, 0);
+    stm32Device_t* device = stm32_device_queue_allocate(handle, CAN_FD_ROLE_FD);
 
     if (device == NULL)
     {
@@ -74,14 +75,8 @@ void smac_can_fd_drop(smacCanFd_t canfd)
 smacRetCode_t smac_can_fd_set_event(smacCanFd_t canfd, smacCanFdEvent_t* event,
                                     smacMcuEventData_t data)
 {
-    if (canfd == NULL)
-    {
-        return SMAC_RET_PARAM_ERR;
-    }
-
-    stm32Device_t* device  = (stm32Device_t*)canfd;
-    device->addition      &= CAN_FD_ADDITION_FD;
-    return stm32_device_event_queue_allocate(device, (stm32DeviceEventHandle_t*)event, data);
+    return stm32_device_event_queue_allocate((stm32Device_t*)canfd,
+                                             (stm32DeviceEventHandle_t*)event, data);
 }
 
 /// @brief Clean up events associated with the specified CAN FD instance.
@@ -308,20 +303,35 @@ smacRetCode_t smac_can_fd_async_receive_channel1(smacCanFd_t canfd, smacCanFdMes
 /// @brief Interface for handling CAN FD events in a classic manner.
 /// ===============================================================================================
 
+/// @brief Create a classic CAN instance.
+/// @details The specific implementation of @ref smac_can_fd_create_classic.
+smacCanFd_t smac_can_fd_create_classic(void* handle)
+{
+    // Allocate a device from the STM32 device queue for the classic CAN instance.
+    stm32Device_t* device = stm32_device_queue_allocate(handle, CAN_FD_ROLE_CLASSIC);
+
+    if (device == NULL)
+    {
+        return NULL;
+    }
+    // Initialize the cache for this device in the STM32 device cache queue.
+    if (stm32_device_cache_queue_allocate(device) != SMAC_RET_OK)
+    {
+        stm32_device_queue_free(device);
+        return NULL;
+    }
+
+    return (smacCanFd_t)device;
+}
+
 /// @brief Set the CAN FD event handling mode to classic for the specified CAN FD instance.
 /// @details This function configures the CAN FD instance to use the classic event handling mode,
 /// where events are handled using the traditional CAN event callbacks.
 smacRetCode_t smac_can_fd_set_event_classic(smacCanFd_t canfd, smacCanEvent_t* event,
                                             smacMcuEventData_t data)
 {
-    if (canfd == NULL)
-    {
-        return SMAC_RET_PARAM_ERR;
-    }
-
-    stm32Device_t* device  = (stm32Device_t*)canfd;
-    device->addition      &= CAN_FD_ADDITION_CLASSIC;
-    return stm32_device_event_queue_allocate(device, (stm32DeviceEventHandle_t*)event, data);
+    return stm32_device_event_queue_allocate((stm32Device_t*)canfd,
+                                             (stm32DeviceEventHandle_t*)event, data);
 }
 
 /// @brief Transmit a CAN FD message using the classic event handling mode.
@@ -485,14 +495,14 @@ static void on_rx_fifo_callback(FDCAN_HandleTypeDef* hfdcan, uint32_t RxFifoITs,
 
     stm32DeviceEvent_t* event = stm32_device_event_queue_search((stm32DeviceHandle_t)hfdcan);
 
-    if ((event->device->addition & CAN_FD_ADDITION_FD) == CAN_FD_ADDITION_FD)
+    if ((event->device->addition & CAN_FD_ROLE_MASK) == CAN_FD_ROLE_FD)
     {
         if ((event != NULL) && (event->event != NULL) && (event->event->can_fd.rx_complete != NULL))
         {
             event->event->can_fd.rx_complete(event->device, event->event_data);
         }
     }
-    else
+    else if ((event->device->addition & CAN_FD_ROLE_MASK) == CAN_FD_ROLE_CLASSIC)
     {
         if ((event != NULL) && (event->event != NULL) && (event->event->can.rx_complete != NULL))
         {
@@ -521,14 +531,14 @@ void HAL_FDCAN_TxBufferCompleteCallback(FDCAN_HandleTypeDef* hfdcan, uint32_t Bu
 
     stm32DeviceEvent_t* event = stm32_device_event_queue_search((stm32DeviceHandle_t)hfdcan);
 
-    if ((event->device->addition & CAN_FD_ADDITION_FD) == CAN_FD_ADDITION_FD)
+    if ((event->device->addition & CAN_FD_ROLE_MASK) == CAN_FD_ROLE_FD)
     {
         if ((event != NULL) && (event->event != NULL) && (event->event->can_fd.tx_complete != NULL))
         {
             event->event->can_fd.tx_complete(event->device, event->event_data);
         }
     }
-    else
+    else if ((event->device->addition & CAN_FD_ROLE_MASK) == CAN_FD_ROLE_CLASSIC)
     {
         if ((event != NULL) && (event->event != NULL) && (event->event->can.tx_complete != NULL))
         {
