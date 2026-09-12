@@ -42,10 +42,7 @@ smacRetCode_t smac_adc_set_event(smacAdc_t adc, smacAdcEvent_t* event, smacMcuEv
 /// @note This function will remove all event callbacks associated with the specified ADC instance.
 void smac_adc_clean_event(smacAdc_t adc)
 {
-    if (adc != NULL)
-    {
-        stm32_device_event_queue_free((stm32Device_t*)adc);
-    }
+    stm32_device_event_queue_free((stm32Device_t*)adc);
 }
 
 /// @brief Perform a conversion on the specified ADC instance.

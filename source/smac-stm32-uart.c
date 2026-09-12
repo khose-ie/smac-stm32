@@ -21,10 +21,7 @@ smacRetCode_t smac_uart_set_event(smacUart_t uart, smacUartEvent_t* event,
 
 void smac_uart_clean_event(smacUart_t uart)
 {
-    if (uart != NULL)
-    {
-        stm32_device_event_queue_free((stm32Device_t*)uart);
-    }
+    stm32_device_event_queue_free((stm32Device_t*)uart);
 }
 
 smacRetCode_t smac_uart_transmit(smacUart_t uart, const uint8_t* data, uint32_t size,

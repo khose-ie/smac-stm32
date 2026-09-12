@@ -88,10 +88,7 @@ smacRetCode_t smac_can_fd_set_event(smacCanFd_t canfd, smacCanFdEvent_t* event,
 /// @details The specific implementation of @ref smac_can_fd_clean_event.
 void smac_can_fd_clean_event(smacCanFd_t canfd)
 {
-    if (canfd != NULL)
-    {
-        stm32_device_event_queue_free((stm32Device_t*)canfd);
-    }
+    stm32_device_event_queue_free((stm32Device_t*)canfd);
 }
 
 /// @brief Activate a CAN FD message using the specified CAN FD instance.

@@ -24,7 +24,7 @@
 /// @defgroup can_classic_low_level Classic CAN Low-Level Interface
 /// @brief Low-level interface for handling classic CAN instances on STM32 MCUs.
 /// ===============================================================================================
-    
+
 #ifndef STM32_CAN_FD_AS_CLASSIC
 
 /// @brief Create a classic CAN instance within the MCU abstraction layer.
@@ -75,10 +75,7 @@ static smacRetCode_t can_classic_set_event(smacCan_t can, smacCanEvent_t* event,
 /// @details The specific implementation of @ref smac_can_clean_event for classic CAN instances.
 static void can_classic_clean_event(smacCan_t can)
 {
-    if (can != NULL)
-    {
-        stm32_device_event_queue_free((stm32Device_t*)can);
-    }
+    stm32_device_event_queue_free((stm32Device_t*)can);
 }
 
 /// @brief Activate a classic CAN instance within the MCU abstraction layer.

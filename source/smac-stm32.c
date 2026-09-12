@@ -191,13 +191,16 @@ smacRetCode_t stm32_device_event_queue_allocate(stm32Device_t* device,
 /// by setting the device pointer and event data to NULL.
 void stm32_device_event_queue_free(stm32Device_t* device)
 {
-    stm32DeviceEvent_t* event =
-        stm32_device_event_queue_search_with_addition(device->handle, device->addition);
-
-    if (event != NULL)
+    if (device != NULL)
     {
-        event->device     = NULL;
-        event->event_data = NULL;
+        stm32DeviceEvent_t* event =
+            stm32_device_event_queue_search_with_addition(device->handle, device->addition);
+
+        if (event != NULL)
+        {
+            event->device     = NULL;
+            event->event_data = NULL;
+        }
     }
 }
 
