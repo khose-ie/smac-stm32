@@ -11,7 +11,7 @@
 /// with the provided handle and pin.
 smacIo_t smac_io_create(void* handle, uint32_t pin)
 {
-    return (smacIo_t)(stm32_device_queue_allocate(handle, pin));
+    return (smacIo_t)(stm32_device_queue_allocate_with_addition(handle, pin));
 }
 
 /// @brief Drop an IO instance within the MCU abstraction layer.

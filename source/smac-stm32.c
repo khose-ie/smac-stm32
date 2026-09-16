@@ -91,13 +91,18 @@ void stm32_device_queue_initialize(void)
     memset(stm32_stack()->device_queue, 0, SMAC_STM32_PERIPH_NUM * sizeof(stm32Device_t));
 }
 
-/// @brief Allocate a device from the device queue.
+stm32Device_t* stm32_device_queue_allocate(stm32DeviceHandle_t handle)
+{
+    return stm32_device_queue_allocate_with_addition(handle, 0);
+}
+
+/// @brief Allocate a device from the device queue with addition information.
 /// @details This function first searches for an existing device with the specified handle and
 /// addition. If found, it returns the existing device. If not found, it allocates a new device
 /// entry in the queue with the specified handle and addition, and returns it. If the queue is full,
 /// it returns NULL.
-stm32Device_t* stm32_device_queue_allocate(stm32DeviceHandle_t handle,
-                                           stm32DeviceAddition_t addition)
+stm32Device_t* stm32_device_queue_allocate_with_addition(stm32DeviceHandle_t handle,
+                                                         stm32DeviceAddition_t addition)
 {
     if (handle == NULL)
     {

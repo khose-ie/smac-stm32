@@ -80,10 +80,15 @@ void stm32_device_queue_initialize(void);
 
 /// @brief Allocate a device from the device queue.
 /// @param handle Handle of the device to allocate.
+/// @return Pointer to the allocated device, or NULL if allocation failed.
+stm32Device_t* stm32_device_queue_allocate(stm32DeviceHandle_t handle);
+
+/// @brief Allocate a device from the device queue with addition information.
+/// @param handle Handle of the device to allocate.
 /// @param addition Addition information for the device.
 /// @return Pointer to the allocated device, or NULL if allocation failed.
-stm32Device_t* stm32_device_queue_allocate(stm32DeviceHandle_t handle,
-                                           stm32DeviceAddition_t addition);
+stm32Device_t* stm32_device_queue_allocate_with_addition(stm32DeviceHandle_t handle,
+                                                         stm32DeviceAddition_t addition);
 
 /// @brief Free the specified device from the device queue.
 /// @param device Pointer to the device to free.

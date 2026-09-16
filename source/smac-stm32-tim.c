@@ -7,7 +7,7 @@
 /// with the provided handle.
 smacTim_t smac_tim_create(void* handle)
 {
-    return (smacTim_t)stm32_device_queue_allocate(handle, 0);
+    return (smacTim_t)stm32_device_queue_allocate(handle);
 }
 
 /// @brief Drop a Timer instance within the MCU abstraction layer.

@@ -31,7 +31,7 @@ static uint16_t stm32_cast_i2c_mem_addr_size(smacI2cMemAddrSize mem_addr_size)
 /// associating it with the provided handle.
 smacI2c_t smac_i2c_mem_create(void* handle)
 {
-    return (smacI2c_t)stm32_device_queue_allocate(handle, STM32_I2C_ROLE_MEM);
+    return (smacI2c_t)stm32_device_queue_allocate_with_addition(handle, STM32_I2C_ROLE_MEM);
 }
 
 /// @brief Drop an I2C memory instance within the MCU abstraction layer.
@@ -191,7 +191,7 @@ smacRetCode_t smac_i2c_mem_async_read(smacI2c_t i2c, uint16_t slave, uint16_t me
 /// associating it with the provided handle.
 smacI2c_t smac_i2c_master_create(void* handle)
 {
-    return (smacI2c_t)stm32_device_queue_allocate(handle, STM32_I2C_ROLE_MASTER);
+    return (smacI2c_t)stm32_device_queue_allocate_with_addition(handle, STM32_I2C_ROLE_MASTER);
 }
 
 /// @brief Drop an I2C master instance within the MCU abstraction layer.
@@ -337,7 +337,7 @@ smacRetCode_t smac_i2c_master_async_receive(smacI2c_t i2c, uint16_t slave, uint8
 /// associating it with the provided handle.
 smacI2c_t smac_i2c_slave_create(void* handle)
 {
-    return (smacI2c_t)stm32_device_queue_allocate(handle, STM32_I2C_ROLE_SLAVE);
+    return (smacI2c_t)stm32_device_queue_allocate_with_addition(handle, STM32_I2C_ROLE_SLAVE);
 }
 
 /// @brief Drop an I2C slave instance within the MCU abstraction layer.

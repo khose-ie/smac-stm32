@@ -44,7 +44,7 @@
 smacCanFd_t smac_can_fd_create(void* handle)
 {
     // Allocate a device from the STM32 device queue for the classic CAN instance.
-    stm32Device_t* device = stm32_device_queue_allocate(handle, CAN_FD_ROLE_FD);
+    stm32Device_t* device = stm32_device_queue_allocate_with_addition(handle, CAN_FD_ROLE_FD);
 
     if (device == NULL)
     {
@@ -307,7 +307,7 @@ smacRetCode_t smac_can_fd_async_receive_channel1(smacCanFd_t canfd, smacCanFdMes
 smacCanFd_t smac_can_fd_create_classic(void* handle)
 {
     // Allocate a device from the STM32 device queue for the classic CAN instance.
-    stm32Device_t* device = stm32_device_queue_allocate(handle, CAN_FD_ROLE_CLASSIC);
+    stm32Device_t* device = stm32_device_queue_allocate_with_addition(handle, CAN_FD_ROLE_CLASSIC);
 
     if (device == NULL)
     {

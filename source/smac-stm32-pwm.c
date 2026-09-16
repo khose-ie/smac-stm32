@@ -7,7 +7,7 @@
 /// with the provided handle and channel.
 smacPwm_t smac_pwm_create(void* handle)
 {
-    return (smacPwm_t)(stm32_device_queue_allocate(handle, 0));
+    return (smacPwm_t)stm32_device_queue_allocate(handle);
 }
 
 /// @brief Drop a PWM instance within the MCU abstraction layer.

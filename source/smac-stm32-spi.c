@@ -16,7 +16,7 @@
 /// associating it with the provided handle.
 smacSpi_t smac_spi_master_create(void* handle)
 {
-    return (smacSpi_t)(stm32_device_queue_allocate(handle, STM32_SPI_ROLE_MASTER));
+    return (smacSpi_t)stm32_device_queue_allocate_with_addition(handle, STM32_SPI_ROLE_MASTER);
 }
 
 /// @brief Drop an SPI Master instance within the MCU abstraction layer.
@@ -200,7 +200,7 @@ smacRetCode_t smac_spi_master_async_transmit_receive(smacSpi_t spi, smacIo_t nss
 /// associating it with the provided handle.
 smacSpi_t smac_spi_slave_create(void* handle)
 {
-    return (smacSpi_t)(stm32_device_queue_allocate(handle, STM32_SPI_ROLE_SLAVE));
+    return (smacSpi_t)stm32_device_queue_allocate_with_addition(handle, STM32_SPI_ROLE_SLAVE);
 }
 
 /// @brief Drop an SPI Slave instance within the MCU abstraction layer.

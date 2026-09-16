@@ -3,7 +3,7 @@
 
 smacUart_t smac_uart_create(void* handle)
 {
-    return (smacUart_t)stm32_device_queue_allocate(handle, 0);
+    return (smacUart_t)stm32_device_queue_allocate(handle);
 }
 
 void smac_uart_drop(smacUart_t uart)

@@ -10,7 +10,7 @@
 /// @return The created ADC instance handle.
 smacAdc_t smac_adc_create(void* handle)
 {
-    return (smacAdc_t)stm32_device_queue_allocate(handle, 0);
+    return (smacAdc_t)stm32_device_queue_allocate(handle);
 }
 
 /// @brief Drop an ADC instance within the MCU abstraction layer.

@@ -22,7 +22,7 @@
 smacCan_t smac_can_create(void* handle)
 {
     // Allocate a device from the STM32 device queue for the classic CAN instance.
-    stm32Device_t* device = stm32_device_queue_allocate(handle, 0);
+    stm32Device_t* device = stm32_device_queue_allocate(handle);
 
     if (device == NULL)
     {
