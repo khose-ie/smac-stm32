@@ -29,6 +29,7 @@ target_sources(${CMAKE_PROJECT_NAME} PRIVATE source/smac-stm32-i2c-master.c)
 target_sources(${CMAKE_PROJECT_NAME} PRIVATE source/smac-stm32-i2c-mem.c)
 target_sources(${CMAKE_PROJECT_NAME} PRIVATE source/smac-stm32-i2c-slave.c)
 target_sources(${CMAKE_PROJECT_NAME} PRIVATE source/smac-stm32-io.c)
+target_sources(${CMAKE_PROJECT_NAME} PRIVATE source/smac-stm32-pwm.c)
 target_sources(${CMAKE_PROJECT_NAME} PRIVATE source/smac-stm32-uart.c)
 
 # Add self include path
