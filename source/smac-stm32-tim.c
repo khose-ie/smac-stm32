@@ -129,3 +129,35 @@ smacRetCode_t smac_tim_async_deactivate_data(smacTim_t tim)
 
     return stm32_cast_code(HAL_TIM_Base_Stop_DMA(device->handle));
 }
+
+/// ===============================================================================================
+/// @name TIM Callback Implementations
+/// @brief Implementation of TIM callback functions for handling various TIM events.
+/// ===============================================================================================
+
+void HAL_TIM_PeriodElapsedCallback_Custom(TIM_HandleTypeDef* htim)
+{
+    stm32DeviceEvent_t* event = stm32_device_event_queue_search((stm32DeviceHandle_t*)htim);
+
+    if (event != NULL)
+    {
+        assert(event->device != NULL);
+        assert(event->event != NULL);
+
+        if (event->event->tim.timeout != NULL)
+        {
+            event->event->tim.timeout(event->device, event->event_data);
+        }
+    }
+}
+
+__weak void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef* htim)
+{
+    HAL_TIM_PeriodElapsedCallback_Custom(htim);
+}
+
+// void HAL_TIM_PeriodElapsedHalfCpltCallback(TIM_HandleTypeDef* htim) {}
+
+// void HAL_TIM_TriggerCallback(TIM_HandleTypeDef* htim) {}
+
+// void HAL_TIM_TriggerHalfCpltCallback(TIM_HandleTypeDef* htim) {}

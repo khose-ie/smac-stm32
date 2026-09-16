@@ -124,10 +124,6 @@ smacRetCode_t smac_uart_async_abort(smacUart_t uart)
 /// @brief Implementation of UART callback functions for handling various UART events.
 /// ===============================================================================================
 
-/// @brief  Tx Transfer completed callbacks.
-/// @param  huart  Pointer to a UART_HandleTypeDef structure that contains
-///                the configuration information for the specified UART module.
-/// @retval None
 void HAL_UART_TxCpltCallback(UART_HandleTypeDef* huart)
 {
     stm32DeviceEvent_t* event = stm32_device_event_queue_search((stm32DeviceHandle_t*)huart);
@@ -144,16 +140,6 @@ void HAL_UART_TxCpltCallback(UART_HandleTypeDef* huart)
     }
 }
 
-/// @brief  Tx Half Transfer completed callbacks.
-/// @param  huart  Pointer to a UART_HandleTypeDef structure that contains
-///                the configuration information for the specified UART module.
-/// @retval None
-// void HAL_UART_TxHalfCpltCallback(UART_HandleTypeDef* huart) {}
-
-/// @brief  Rx Transfer completed callbacks.
-/// @param  huart  Pointer to a UART_HandleTypeDef structure that contains
-///                the configuration information for the specified UART module.
-/// @retval None
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef* huart)
 {
     stm32DeviceEvent_t* event = stm32_device_event_queue_search((stm32DeviceHandle_t*)huart);
@@ -170,16 +156,6 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef* huart)
     }
 }
 
-/// @brief  Rx Half Transfer completed callbacks.
-/// @param  huart  Pointer to a UART_HandleTypeDef structure that contains
-///                the configuration information for the specified UART module.
-/// @retval None
-// void HAL_UART_RxHalfCpltCallback(UART_HandleTypeDef* huart) {}
-
-/// @brief  UART error callbacks.
-/// @param  huart  Pointer to a UART_HandleTypeDef structure that contains
-///                the configuration information for the specified UART module.
-/// @retval None
 void HAL_UART_ErrorCallback(UART_HandleTypeDef* huart)
 {
     stm32DeviceEvent_t* event = stm32_device_event_queue_search((stm32DeviceHandle_t*)huart);
@@ -197,9 +173,6 @@ void HAL_UART_ErrorCallback(UART_HandleTypeDef* huart)
     }
 }
 
-/// @brief  UART Abort Complete callback.
-/// @param  huart UART handle.
-/// @retval None
 void HAL_UART_AbortCpltCallback(UART_HandleTypeDef* huart)
 {
     stm32DeviceEvent_t* event = stm32_device_event_queue_search((stm32DeviceHandle_t*)huart);
@@ -216,21 +189,10 @@ void HAL_UART_AbortCpltCallback(UART_HandleTypeDef* huart)
     }
 }
 
-/// @brief  UART Abort Complete callback.
-/// @param  huart UART handle.
-/// @retval None
 // void HAL_UART_AbortTransmitCpltCallback(UART_HandleTypeDef* huart) {}
 
-/// @brief  UART Abort Receive Complete callback.
-/// @param  huart UART handle.
-/// @retval None
 // void HAL_UART_AbortReceiveCpltCallback(UART_HandleTypeDef* huart) {}
 
-/// @brief  Reception Event Callback (Rx event notification called after use of advanced reception
-/// service).
-/// @param  huart UART handle
-/// @param  Size  Number of data available in application reception buffer (indicates a position in
-///               reception buffer until which, data are available)
 /// @retval None
 void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef* huart, uint16_t Size)
 {
