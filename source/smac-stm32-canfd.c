@@ -1,6 +1,5 @@
 #include <smac-mcu.h>
 #include <smac-stm32.h>
-#include <stm32-can.h>
 #include <stm32.h>
 #include <string.h>
 
