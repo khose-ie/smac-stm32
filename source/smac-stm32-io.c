@@ -43,7 +43,7 @@ smacIoState smac_io_state(smacIo_t io)
     stm32Device_t* device = (stm32Device_t*)io;
     return (device != NULL) && (device->handle != NULL)
                ? io_state_stm32_to_smac(
-                     HAL_GPIO_ReadPin((const GPIO_TypeDef*)device->handle, device->addition))
+                     HAL_GPIO_ReadPin((GPIO_TypeDef*)device->handle, device->addition))
                : SMAC_IO_RST;
 }
 
