@@ -29,7 +29,8 @@ typedef union
     smacI2cMemEvent_t i2c_mem;
     smacIoEvent_t io;
     smacPwmEvent_t pwm;
-    smacSpiEvent_t spi;
+    smacSpiMasterEvent_t spi_master;
+    smacSpiSlaveEvent_t spi_slave;
     smacTimEvent_t tim;
     smacUartEvent_t uart;
 } stm32DeviceEventHandle_t;
