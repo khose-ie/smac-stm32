@@ -468,6 +468,107 @@ smacRetCode_t smac_can_fd_async_receive_channel1_classic(smacCanFd_t canfd, smac
 }
 
 /// ===============================================================================================
+/// @name CAN classic interface
+/// @brief Implementation of classic CAN interface functions for handling various CAN events with
+/// CAN FD device.
+/// ===============================================================================================
+
+/// @brief Create a CAN instance within the MCU abstraction layer.
+/// @details Implement the creation API of smac mcu, please see @ref smac_can_create for details.
+smacCan_t smac_can_create(void* handle)
+{
+    return smac_can_fd_create_classic(handle);
+}
+
+/// @brief Drop a CAN instance within the MCU abstraction layer.
+/// @details Implement the dropping API of smac mcu, please see @ref smac_can_drop for details.
+void smac_can_drop(smacCan_t can)
+{
+    smac_can_fd_drop(can);
+}
+
+/// @brief Implement the setting of CAN event callbacks for the specified CAN instance within the
+/// MCU abstraction layer.
+/// @details Implement the setting API of smac mcu, please see @ref smac_can_set_event for details.
+smacRetCode_t smac_can_set_event(smacCan_t can, smacCanEvent_t* event, smacMcuEventData_t data)
+{
+    return smac_can_fd_set_event_classic(can, event, data);
+}
+
+/// @brief Clean CAN event callbacks for the specified CAN instance.
+/// @details Implement the cleaning API of smac mcu, please see @ref smac_can_clean_event for
+/// details.
+void smac_can_clean_event(smacCan_t can)
+{
+    smac_can_fd_clean_event(can);
+}
+
+/// @brief Activate a CAN instance within the MCU abstraction layer.
+/// @details Implement the activation API of smac mcu, please see @ref smac_can_active for details.
+smacRetCode_t smac_can_active(smacCan_t can)
+{
+    return smac_can_fd_active(can);
+}
+
+/// @brief Deactivate a CAN instance within the MCU abstraction layer.
+/// @details Implement the deactivation API of smac mcu, please see @ref smac_can_deactive for
+/// details.
+smacRetCode_t smac_can_deactive(smacCan_t can)
+{
+
+    return smac_can_fd_deactive(can);
+}
+
+/// @brief Transmit a message over the specified CAN instance.
+/// @details Implement the transmission API of smac mcu, please see @ref smac_can_transmit for
+/// details.
+smacRetCode_t smac_can_transmit(smacCan_t can, const smacCanMessage* message, uint32_t timeout)
+{
+    return smac_can_fd_transmit_classic(can, message, timeout);
+}
+
+/// @brief Receive a message from channel 0 of the specified CAN instance.
+/// @details Implement the reception API of smac mcu for channel 0, please see @ref
+/// smac_can_receive_channel0 for details.
+smacRetCode_t smac_can_receive_channel0(smacCan_t can, smacCanMessage* message, uint32_t timeout)
+{
+    return smac_can_fd_receive_channel0_classic(can, message, timeout);
+}
+/// @brief Receive a message from channel 1 of the specified CAN instance.
+/// @details Implement the reception API of smac mcu for channel 1, please see @ref
+/// smac_can_receive_channel1 for details.
+smacRetCode_t smac_can_receive_channel1(smacCan_t can, smacCanMessage* message, uint32_t timeout)
+{
+    return smac_can_fd_receive_channel1_classic(can, message, timeout);
+}
+
+/// @brief Asynchronously transmit a message over the specified CAN instance.
+/// @details Implement the asynchronous transmission API of smac mcu, please see @ref
+/// smac_can_async_transmit for details.
+smacRetCode_t smac_can_async_transmit(smacCan_t can, const smacCanMessage* message)
+{
+
+    return smac_can_fd_async_transmit_classic(can, message);
+}
+
+/// @brief Asynchronously receive a message over channel 0 of the specified CAN instance.
+/// @details Implement the asynchronous reception API of smac mcu for channel 0, please see @ref
+/// smac_can_async_receive_channel0 for details.
+smacRetCode_t smac_can_async_receive_channel0(smacCan_t can, smacCanMessage* message)
+{
+
+    return smac_can_fd_async_receive_channel0_classic(can, message);
+}
+
+/// @brief Asynchronously receive a message over channel 1 of the specified CAN instance.
+/// @details Implement the asynchronous reception API of smac mcu for channel 1, please see @ref
+/// smac_can_async_receive_channel1 for details.
+smacRetCode_t smac_can_async_receive_channel1(smacCan_t can, smacCanMessage* message)
+{
+    return smac_can_fd_async_receive_channel1_classic(can, message);
+}
+
+/// ===============================================================================================
 /// @name CAN FD Callback Implementations
 /// @brief Implementation of CAN FD callback functions for handling various CAN FD events.
 /// ===============================================================================================
