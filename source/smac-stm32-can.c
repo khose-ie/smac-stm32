@@ -15,6 +15,8 @@
 #define cast_from_stm32_ide(frame_kind)                                                            \
     ((frame_kind == CAN_ID_STD) ? SMAC_CAN_FRAME_STANDARD : SMAC_CAN_FRAME_EXTENDED)
 
+#if defined(HAL_CAN_MODULE_ENABLED)
+
 /// @brief Create a classic CAN instance within the MCU abstraction layer.
 /// @details The specific implementation of @ref smac_can_create for classic CAN instances.
 smacCan_t smac_can_create(void* handle)
@@ -327,3 +329,5 @@ void HAL_CAN_RxFifo1MsgPendingCallback(CAN_HandleTypeDef* hcan)
 // void HAL_CAN_RxFifo1FullCallback(CAN_HandleTypeDef *hcan);
 // void HAL_CAN_SleepCallback(CAN_HandleTypeDef *hcan);
 // void HAL_CAN_WakeUpFromRxMsgCallback(CAN_HandleTypeDef *hcan);
+
+#endif // HAL_CAN_MODULE_ENABLED
