@@ -1,3 +1,4 @@
+#include <assert.h>
 #include <smac-mcu.h>
 #include <smac-stm32.h>
 #include <stm32.h>
@@ -11,6 +12,7 @@
 /// with the provided handle and pin.
 smacIo_t smac_io_create(void* handle, uint32_t pin)
 {
+    assert(handle != NULL);
     return (smacIo_t)(stm32_device_queue_allocate_with_addition(handle, pin));
 }
 
@@ -18,20 +20,26 @@ smacIo_t smac_io_create(void* handle, uint32_t pin)
 /// @details This function releases the resources associated with the specified IO instance.
 void smac_io_drop(smacIo_t io)
 {
+    assert(io != NULL);
+
     stm32_device_queue_free((stm32Device_t*)io);
     stm32_device_event_queue_free((stm32Device_t*)io);
 }
 
 /// @brief Set IO event callbacks for the specified IO instance.
-smacRetCode_t smac_io_set_event(smacIo_t io, smacIoEvent_t* event, smacMcuEventData_t data)
+smacRetCode_t smac_io_set_event(smacIo_t io, smacIoEvent_t* event, smacMcuEventData_t event_data)
 {
+    assert(io != NULL);
+    assert(event != NULL);
+
     return stm32_device_event_queue_allocate((stm32Device_t*)io, (stm32DeviceEventHandle_t*)event,
-                                             data);
+                                             event_data);
 }
 
 /// @brief Clean IO event callbacks for the specified IO instance.
 void smac_io_clean_event(smacIo_t io)
 {
+    assert(io != NULL);
     stm32_device_event_queue_free((stm32Device_t*)io);
 }
 
@@ -41,10 +49,12 @@ void smac_io_clean_event(smacIo_t io)
 smacIoState smac_io_state(smacIo_t io)
 {
     stm32Device_t* device = (stm32Device_t*)io;
-    return (device != NULL) && (device->handle != NULL)
-               ? io_state_stm32_to_smac(
-                     HAL_GPIO_ReadPin((GPIO_TypeDef*)device->handle, device->addition))
-               : SMAC_IO_RST;
+
+    assert(device != NULL);
+    assert(device->handle != NULL);
+
+    return io_state_stm32_to_smac(
+        HAL_GPIO_ReadPin((GPIO_TypeDef*)device->handle, device->addition));
 }
 
 /// @brief Set the state of the specified IO instance.
@@ -53,10 +63,8 @@ smacRetCode_t smac_io_set_state(smacIo_t io, smacIoState state)
 {
     stm32Device_t* device = (stm32Device_t*)io;
 
-    if ((device == NULL) || (device->handle == NULL))
-    {
-        return SMAC_RET_NULL_REF;
-    }
+    assert(device != NULL);
+    assert(device->handle != NULL);
 
     HAL_GPIO_WritePin((GPIO_TypeDef*)device->handle, device->addition,
                       io_state_smac_to_stm32(state));
@@ -69,10 +77,8 @@ smacRetCode_t smac_io_reverse_state(smacIo_t io)
 {
     stm32Device_t* device = (stm32Device_t*)io;
 
-    if ((device == NULL) || (device->handle == NULL))
-    {
-        return SMAC_RET_NULL_REF;
-    }
+    assert(device != NULL);
+    assert(device->handle != NULL);
 
     HAL_GPIO_TogglePin((GPIO_TypeDef*)device->handle, device->addition);
     return SMAC_RET_OK;
@@ -87,9 +93,15 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 {
     stm32DeviceEvent_t* event = stm32_device_event_queue_search_with_addition(NULL, GPIO_Pin);
 
-    if ((event != NULL) && (event->event != NULL) && (event->event->io.state_change != NULL))
+    if (event != NULL)
     {
-        event->event->io.state_change(event->device, event->event_data);
+        assert(event->device != NULL);
+        assert(event->event != NULL);
+
+        if (event->event->io.state_change != NULL)
+        {
+            event->event->io.state_change(event->device, event->event_data);
+        }
     }
 }
 

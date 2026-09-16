@@ -1,5 +1,6 @@
 
 
+#include <assert.h>
 #include <smac-mcu.h>
 #include <smac-stm32.h>
 #include <stm32.h>
@@ -93,6 +94,7 @@ void stm32_device_queue_initialize(void)
 
 stm32Device_t* stm32_device_queue_allocate(stm32DeviceHandle_t handle)
 {
+    assert(handle != NULL);
     return stm32_device_queue_allocate_with_addition(handle, 0);
 }
 
@@ -104,10 +106,7 @@ stm32Device_t* stm32_device_queue_allocate(stm32DeviceHandle_t handle)
 stm32Device_t* stm32_device_queue_allocate_with_addition(stm32DeviceHandle_t handle,
                                                          stm32DeviceAddition_t addition)
 {
-    if (handle == NULL)
-    {
-        return NULL;
-    }
+    assert(handle != NULL);
 
     for (stm32Device_t* device = stm32_stack()->device_queue;
          device < stm32_stack()->device_queue + SMAC_STM32_PERIPH_NUM; device++)
@@ -137,11 +136,10 @@ stm32Device_t* stm32_device_queue_allocate_with_addition(stm32DeviceHandle_t han
 /// its addition to 0.
 void stm32_device_queue_free(stm32Device_t* device)
 {
-    if (device != NULL)
-    {
-        device->handle   = NULL;
-        device->addition = 0;
-    }
+    assert(device != NULL);
+
+    device->handle   = NULL;
+    device->addition = 0;
 }
 
 /// @brief Initialize the device event queue with the specified number of events.
@@ -161,10 +159,8 @@ smacRetCode_t stm32_device_event_queue_allocate(stm32Device_t* device,
                                                 stm32DeviceEventHandle_t* event_handle,
                                                 stm32DeviceEventData_t event_data)
 {
-    if ((device == NULL) || (event_handle == NULL))
-    {
-        return SMAC_RET_PARAM_ERR;
-    }
+    assert(device != NULL);
+    assert(event_handle != NULL);
 
     for (stm32DeviceEvent_t* event = stm32_stack()->device_event_queue;
          event < stm32_stack()->device_event_queue + SMAC_STM32_EVENTABLE_PERIPH_NUM; event++)
@@ -196,16 +192,15 @@ smacRetCode_t stm32_device_event_queue_allocate(stm32Device_t* device,
 /// by setting the device pointer and event data to NULL.
 void stm32_device_event_queue_free(stm32Device_t* device)
 {
-    if (device != NULL)
-    {
-        stm32DeviceEvent_t* event =
-            stm32_device_event_queue_search_with_addition(device->handle, device->addition);
+    assert(device != NULL);
 
-        if (event != NULL)
-        {
-            event->device     = NULL;
-            event->event_data = NULL;
-        }
+    stm32DeviceEvent_t* event =
+        stm32_device_event_queue_search_with_addition(device->handle, device->addition);
+
+    if (event != NULL)
+    {
+        event->device     = NULL;
+        event->event_data = NULL;
     }
 }
 
@@ -224,10 +219,7 @@ stm32DeviceEvent_t* stm32_device_event_queue_search(stm32DeviceHandle_t handle)
 stm32DeviceEvent_t* stm32_device_event_queue_search_with_addition(stm32DeviceHandle_t handle,
                                                                   stm32DeviceAddition_t addition)
 {
-    if (handle == NULL)
-    {
-        return NULL;
-    }
+    assert(handle != NULL);
 
     for (stm32DeviceEvent_t* event = stm32_stack()->device_event_queue;
          event < stm32_stack()->device_event_queue + SMAC_STM32_EVENTABLE_PERIPH_NUM; event++)
@@ -259,10 +251,7 @@ void stm32_device_cache_queue_initialize(void)
 /// initializes it. If the cache queue is full, it returns SMAC_RET_STACK_OVERFLOW.
 smacRetCode_t stm32_device_cache_queue_allocate(stm32Device_t* device)
 {
-    if (device == NULL)
-    {
-        return SMAC_RET_PARAM_ERR;
-    }
+    assert(device != NULL);
 
     for (stm32DeviceCache_t* cache = stm32_stack()->device_cache_queue;
          cache < stm32_stack()->device_cache_queue + SMAC_STM32_CACHEABLE_PERIPH_NUM; cache++)
@@ -294,6 +283,8 @@ smacRetCode_t stm32_device_cache_queue_allocate(stm32Device_t* device)
 /// frees it by setting the device pointer to NULL and clearing the cache data.
 void stm32_device_cache_queue_free(stm32Device_t* device)
 {
+    assert(device != NULL);
+
     stm32DeviceCache_t* cache =
         stm32_device_cache_queue_search_with_addition(device->handle, device->addition);
 
@@ -311,7 +302,9 @@ void stm32_device_cache_queue_free(stm32Device_t* device)
 smacRetCode_t stm32_device_cache_queue_set_cache(stm32Device_t* device, uint32_t index,
                                                  stm32DeviceCacheData_t cache_data)
 {
-    if ((device == NULL) || (index >= STM32_DEVICE_CACHE_DATA_MAX))
+    assert(device != NULL);
+
+    if (index >= STM32_DEVICE_CACHE_DATA_MAX)
     {
         return SMAC_RET_PARAM_ERR;
     }
@@ -343,10 +336,7 @@ stm32DeviceCache_t* stm32_device_cache_queue_search(stm32DeviceHandle_t handle)
 stm32DeviceCache_t* stm32_device_cache_queue_search_with_addition(stm32DeviceHandle_t handle,
                                                                   stm32DeviceAddition_t addition)
 {
-    if (handle == NULL)
-    {
-        return NULL;
-    }
+    assert(handle != NULL);
 
     for (stm32DeviceCache_t* cache = stm32_stack()->device_cache_queue;
          cache < stm32_stack()->device_cache_queue + SMAC_STM32_CACHEABLE_PERIPH_NUM; cache++)

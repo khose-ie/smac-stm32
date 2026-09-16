@@ -1,3 +1,4 @@
+#include <assert.h>
 #include <smac-mcu.h>
 #include <smac-stm32.h>
 #include <stm32.h>
@@ -16,6 +17,7 @@
 /// associating it with the provided handle.
 smacSpi_t smac_spi_master_create(void* handle)
 {
+    assert(handle != NULL);
     return (smacSpi_t)stm32_device_queue_allocate_with_addition(handle, STM32_SPI_ROLE_MASTER);
 }
 
@@ -23,21 +25,27 @@ smacSpi_t smac_spi_master_create(void* handle)
 /// @details This function releases the resources associated with the specified SPI Master instance.
 void smac_spi_master_drop(smacSpi_t spi)
 {
+    assert(spi != NULL);
+
     stm32_device_queue_free((stm32Device_t*)spi);
     stm32_device_event_queue_free((stm32Device_t*)spi);
 }
 
 /// @brief Set SPI Master event callbacks for the specified SPI Master instance.
 smacRetCode_t smac_spi_master_set_event(smacSpi_t spi, smacSpiMasterEvent_t* event,
-                                        smacMcuEventData_t data)
+                                        smacMcuEventData_t event_data)
 {
+    assert(spi != NULL);
+    assert(event != NULL);
+
     return stm32_device_event_queue_allocate((stm32Device_t*)spi, (stm32DeviceEventHandle_t*)event,
-                                             data);
+                                             event_data);
 }
 
 /// @brief Clean SPI Master event callbacks for the specified SPI Master instance.
 void smac_spi_master_clean_event(smacSpi_t spi)
 {
+    assert(spi != NULL);
     stm32_device_event_queue_free((stm32Device_t*)spi);
 }
 
@@ -52,11 +60,10 @@ smacRetCode_t smac_spi_master_transmit(smacSpi_t spi, smacIo_t nss, const uint8_
 
     smacRetCode_t code = SMAC_RET_OK;
 
-    if ((device == NULL) || (device->handle == NULL) || (nss_device == NULL) ||
-        (nss_device->handle == NULL))
-    {
-        return SMAC_RET_NULL_REF;
-    }
+    assert(device != NULL);
+    assert(device->handle != NULL);
+    assert(nss_device != NULL);
+    assert(nss_device->handle != NULL);
 
     code = smac_io_set_state(nss, SMAC_IO_RST);
 
@@ -87,11 +94,10 @@ smacRetCode_t smac_spi_master_transmit_receive(smacSpi_t spi, smacIo_t nss, cons
 
     smacRetCode_t code = SMAC_RET_OK;
 
-    if ((device == NULL) || (device->handle == NULL) || (nss_device == NULL) ||
-        (nss_device->handle == NULL))
-    {
-        return SMAC_RET_NULL_REF;
-    }
+    assert(device != NULL);
+    assert(device->handle != NULL);
+    assert(nss_device != NULL);
+    assert(nss_device->handle != NULL);
 
     code = smac_io_set_state(nss, SMAC_IO_RST);
 
@@ -124,11 +130,10 @@ smacRetCode_t smac_spi_master_async_transmit(smacSpi_t spi, smacIo_t nss, const 
     smacRetCode_t code        = SMAC_RET_OK;
     SPI_HandleTypeDef* handle = device->handle;
 
-    if ((device == NULL) || (device->handle == NULL) || (nss_device == NULL) ||
-        (nss_device->handle == NULL))
-    {
-        return SMAC_RET_NULL_REF;
-    }
+    assert(device != NULL);
+    assert(device->handle != NULL);
+    assert(nss_device != NULL);
+    assert(nss_device->handle != NULL);
 
     code = smac_io_set_state(nss, SMAC_IO_RST);
 
@@ -163,11 +168,10 @@ smacRetCode_t smac_spi_master_async_transmit_receive(smacSpi_t spi, smacIo_t nss
     smacRetCode_t code        = SMAC_RET_OK;
     SPI_HandleTypeDef* handle = device->handle;
 
-    if ((device == NULL) || (device->handle == NULL) || (nss_device == NULL) ||
-        (nss_device->handle == NULL))
-    {
-        return SMAC_RET_NULL_REF;
-    }
+    assert(device != NULL);
+    assert(device->handle != NULL);
+    assert(nss_device != NULL);
+    assert(nss_device->handle != NULL);
 
     code = smac_io_set_state(nss, SMAC_IO_RST);
 
@@ -200,6 +204,7 @@ smacRetCode_t smac_spi_master_async_transmit_receive(smacSpi_t spi, smacIo_t nss
 /// associating it with the provided handle.
 smacSpi_t smac_spi_slave_create(void* handle)
 {
+    assert(handle != NULL);
     return (smacSpi_t)stm32_device_queue_allocate_with_addition(handle, STM32_SPI_ROLE_SLAVE);
 }
 
@@ -207,21 +212,27 @@ smacSpi_t smac_spi_slave_create(void* handle)
 /// @details This function releases the resources associated with the specified SPI Slave instance.
 void smac_spi_slave_drop(smacSpi_t spi)
 {
+    assert(spi != NULL);
+
     stm32_device_queue_free((stm32Device_t*)spi);
     stm32_device_event_queue_free((stm32Device_t*)spi);
 }
 
 /// @brief Set SPI Slave event callbacks for the specified SPI Slave instance.
 smacRetCode_t smac_spi_slave_set_event(smacSpi_t spi, smacSpiSlaveEvent_t* event,
-                                       smacMcuEventData_t data)
+                                       smacMcuEventData_t event_data)
 {
+    assert(spi != NULL);
+    assert(event != NULL);
+
     return stm32_device_event_queue_allocate((stm32Device_t*)spi, (stm32DeviceEventHandle_t*)event,
-                                             data);
+                                             event_data);
 }
 
 /// @brief Clean SPI Slave event callbacks for the specified SPI Slave instance.
 void smac_spi_slave_clean_event(smacSpi_t spi)
 {
+    assert(spi != NULL);
     stm32_device_event_queue_free((stm32Device_t*)spi);
 }
 
@@ -232,9 +243,12 @@ smacRetCode_t smac_spi_slave_transmit(smacSpi_t spi, const uint8_t* data, uint32
                                       uint32_t timeout)
 {
     stm32Device_t* device = (stm32Device_t*)spi;
-    return (device != NULL) && (device->handle != NULL)
-               ? stm32_cast_code(HAL_SPI_Transmit(device->handle, (uint8_t*)data, size, timeout))
-               : SMAC_RET_NULL_REF;
+
+    assert(device != NULL);
+    assert(device->handle != NULL);
+    assert(data != NULL);
+
+    return stm32_cast_code(HAL_SPI_Transmit(device->handle, (uint8_t*)data, size, timeout));
 }
 
 /// @brief Receive data over the specified SPI Slave instance.
@@ -243,9 +257,12 @@ smacRetCode_t smac_spi_slave_transmit(smacSpi_t spi, const uint8_t* data, uint32
 smacRetCode_t smac_spi_slave_receive(smacSpi_t spi, uint8_t* data, uint32_t size, uint32_t timeout)
 {
     stm32Device_t* device = (stm32Device_t*)spi;
-    return (device != NULL) && (device->handle != NULL)
-               ? stm32_cast_code(HAL_SPI_Receive(device->handle, data, size, timeout))
-               : SMAC_RET_NULL_REF;
+
+    assert(device != NULL);
+    assert(device->handle != NULL);
+    assert(data != NULL);
+
+    return stm32_cast_code(HAL_SPI_Receive(device->handle, data, size, timeout));
 }
 
 /// @brief Asynchronously transmit data over the specified SPI Slave instance.
@@ -256,11 +273,13 @@ smacRetCode_t smac_spi_slave_async_transmit(smacSpi_t spi, const uint8_t* data, 
     stm32Device_t* device     = (stm32Device_t*)spi;
     SPI_HandleTypeDef* handle = device->handle;
 
-    return (device != NULL) && (device->handle != NULL)
-               ? stm32_cast_code(handle->hdmatx == NULL
-                                     ? HAL_SPI_Transmit_IT(handle, (uint8_t*)data, size)
-                                     : HAL_SPI_Transmit_DMA(handle, (uint8_t*)data, size))
-               : SMAC_RET_NULL_REF;
+    assert(device != NULL);
+    assert(device->handle != NULL);
+    assert(data != NULL);
+
+    return stm32_cast_code(handle->hdmatx == NULL
+                               ? HAL_SPI_Transmit_IT(handle, (uint8_t*)data, size)
+                               : HAL_SPI_Transmit_DMA(handle, (uint8_t*)data, size));
 }
 
 /// @brief Asynchronously receive data over the specified SPI Slave instance.
@@ -271,10 +290,12 @@ smacRetCode_t smac_spi_slave_async_receive(smacSpi_t spi, uint8_t* data, uint32_
     stm32Device_t* device     = (stm32Device_t*)spi;
     SPI_HandleTypeDef* handle = device->handle;
 
-    return (device != NULL) && (device->handle != NULL)
-               ? stm32_cast_code(handle->hdmarx == NULL ? HAL_SPI_Receive_IT(handle, data, size)
-                                                        : HAL_SPI_Receive_DMA(handle, data, size))
-               : SMAC_RET_NULL_REF;
+    assert(device != NULL);
+    assert(device->handle != NULL);
+    assert(data != NULL);
+
+    return stm32_cast_code(handle->hdmarx == NULL ? HAL_SPI_Receive_IT(handle, data, size)
+                                                  : HAL_SPI_Receive_DMA(handle, data, size));
 }
 
 /// ===============================================================================================
@@ -286,17 +307,24 @@ void HAL_SPI_TxCpltCallback(SPI_HandleTypeDef* hspi)
 {
     stm32DeviceEvent_t* event = stm32_device_event_queue_search(hspi);
 
-    if ((event != NULL) && (event->event != NULL))
+    if (event != NULL)
     {
-        if ((event->device->addition & STM32_SPI_ROLE_MASK) == STM32_SPI_ROLE_MASTER &&
-            (event->event->spi_master.tx_complete != NULL))
+        assert(event->device != NULL);
+        assert(event->event != NULL);
+
+        if ((event->device->addition & STM32_SPI_ROLE_MASK) == STM32_SPI_ROLE_MASTER)
         {
-            event->event->spi_master.tx_complete(event->device, event->event_data);
+            if (event->event->spi_master.tx_complete != NULL)
+            {
+                event->event->spi_master.tx_complete(event->device, event->event_data);
+            }
         }
-        else if ((event->device->addition & STM32_SPI_ROLE_MASK) == STM32_SPI_ROLE_SLAVE &&
-                 (event->event->spi_slave.tx_complete != NULL))
+        else if ((event->device->addition & STM32_SPI_ROLE_MASK) == STM32_SPI_ROLE_SLAVE)
         {
-            event->event->spi_slave.tx_complete(event->device, event->event_data);
+            if (event->event->spi_slave.tx_complete != NULL)
+            {
+                event->event->spi_slave.tx_complete(event->device, event->event_data);
+            }
         }
     }
 }
@@ -305,9 +333,15 @@ void HAL_SPI_RxCpltCallback(SPI_HandleTypeDef* hspi)
 {
     stm32DeviceEvent_t* event = stm32_device_event_queue_search(hspi);
 
-    if ((event != NULL) && (event->event != NULL) && (event->event->spi_slave.rx_complete != NULL))
+    if (event != NULL)
     {
-        event->event->spi_slave.rx_complete(event->device, event->event_data);
+        assert(event->device != NULL);
+        assert(event->event != NULL);
+
+        if (event->event->spi_slave.rx_complete != NULL)
+        {
+            event->event->spi_slave.rx_complete(event->device, event->event_data);
+        }
     }
 }
 
@@ -315,10 +349,15 @@ void HAL_SPI_TxRxCpltCallback(SPI_HandleTypeDef* hspi)
 {
     stm32DeviceEvent_t* event = stm32_device_event_queue_search(hspi);
 
-    if ((event != NULL) && (event->event != NULL) &&
-        (event->event->spi_master.tx_rx_complete != NULL))
+    if (event != NULL)
     {
-        event->event->spi_master.tx_rx_complete(event->device, event->event_data);
+        assert(event->device != NULL);
+        assert(event->event != NULL);
+
+        if (event->event->spi_master.tx_rx_complete != NULL)
+        {
+            event->event->spi_master.tx_rx_complete(event->device, event->event_data);
+        }
     }
 }
 
@@ -332,17 +371,24 @@ void HAL_SPI_ErrorCallback(SPI_HandleTypeDef* hspi)
 {
     stm32DeviceEvent_t* event = stm32_device_event_queue_search(hspi);
 
-    if ((event != NULL) && (event->event != NULL))
+    if (event != NULL)
     {
-        if ((event->device->addition & STM32_SPI_ROLE_MASK) == STM32_SPI_ROLE_MASTER &&
-            (event->event->spi_master.error != NULL))
+        assert(event->device != NULL);
+        assert(event->event != NULL);
+
+        if ((event->device->addition & STM32_SPI_ROLE_MASK) == STM32_SPI_ROLE_MASTER)
         {
-            event->event->spi_master.error(event->device, event->event_data);
+            if (event->event->spi_master.error != NULL)
+            {
+                event->event->spi_master.error(event->device, event->event_data);
+            }
         }
-        else if ((event->device->addition & STM32_SPI_ROLE_MASK) == STM32_SPI_ROLE_SLAVE &&
-                 (event->event->spi_slave.error != NULL))
+        else if ((event->device->addition & STM32_SPI_ROLE_MASK) == STM32_SPI_ROLE_SLAVE)
         {
-            event->event->spi_slave.error(event->device, event->event_data);
+            if (event->event->spi_slave.error != NULL)
+            {
+                event->event->spi_slave.error(event->device, event->event_data);
+            }
         }
     }
 }
@@ -351,17 +397,24 @@ void HAL_SPI_AbortCpltCallback(SPI_HandleTypeDef* hspi)
 {
     stm32DeviceEvent_t* event = stm32_device_event_queue_search(hspi);
 
-    if ((event != NULL) && (event->event != NULL))
+    if (event != NULL)
     {
-        if ((event->device->addition & STM32_SPI_ROLE_MASK) == STM32_SPI_ROLE_MASTER &&
-            (event->event->spi_master.abort_complete != NULL))
+        assert(event->device != NULL);
+        assert(event->event != NULL);
+
+        if ((event->device->addition & STM32_SPI_ROLE_MASK) == STM32_SPI_ROLE_MASTER)
         {
-            event->event->spi_master.abort_complete(event->device, event->event_data);
+            if (event->event->spi_master.abort_complete != NULL)
+            {
+                event->event->spi_master.abort_complete(event->device, event->event_data);
+            }
         }
-        else if ((event->device->addition & STM32_SPI_ROLE_MASK) == STM32_SPI_ROLE_SLAVE &&
-                 (event->event->spi_slave.abort_complete != NULL))
+        else if ((event->device->addition & STM32_SPI_ROLE_MASK) == STM32_SPI_ROLE_SLAVE)
         {
-            event->event->spi_slave.abort_complete(event->device, event->event_data);
+            if (event->event->spi_slave.abort_complete != NULL)
+            {
+                event->event->spi_slave.abort_complete(event->device, event->event_data);
+            }
         }
     }
 }

@@ -1,3 +1,4 @@
+#include <assert.h>
 #include <smac-mcu.h>
 #include <smac-stm32.h>
 #include <stm32.h>
@@ -21,7 +22,8 @@
 /// @details The specific implementation of @ref smac_can_create for classic CAN instances.
 smacCan_t smac_can_create(void* handle)
 {
-    // Allocate a device from the STM32 device queue for the classic CAN instance.
+    assert(handle != NULL);
+
     stm32Device_t* device = stm32_device_queue_allocate(handle);
 
     if (device == NULL)
@@ -42,28 +44,30 @@ smacCan_t smac_can_create(void* handle)
 /// @details The specific implementation of @ref smac_can_drop for classic CAN instances.
 void smac_can_drop(smacCan_t can)
 {
-    if (can != NULL)
-    {
-        stm32_device_event_queue_free((stm32Device_t*)can);
-        stm32_device_cache_queue_free((stm32Device_t*)can);
-        stm32_device_queue_free((stm32Device_t*)can);
-    }
+    assert(can != NULL);
+
+    stm32_device_event_queue_free((stm32Device_t*)can);
+    stm32_device_cache_queue_free((stm32Device_t*)can);
+    stm32_device_queue_free((stm32Device_t*)can);
 }
 
 /// @brief Set an event for a classic CAN instance within the MCU abstraction layer.
 /// @details The specific implementation of @ref smac_can_set_event for classic CAN instances.
-smacRetCode_t smac_can_set_event(smacCan_t can, smacCanEvent_t* event, smacMcuEventData_t data)
+smacRetCode_t smac_can_set_event(smacCan_t can, smacCanEvent_t* event,
+                                 smacMcuEventData_t event_data)
 {
-    stm32Device_t* device = (stm32Device_t*)can;
-    return device != NULL
-               ? stm32_device_event_queue_allocate(device, (stm32DeviceEventHandle_t*)event, data)
-               : SMAC_RET_NULL_REF;
+    assert(can != NULL);
+    assert(event != NULL);
+
+    return stm32_device_event_queue_allocate((stm32Device_t*)can, (stm32DeviceEventHandle_t*)event,
+                                             event_data);
 }
 
 /// @brief Clean events for a classic CAN instance within the MCU abstraction layer.
 /// @details The specific implementation of @ref smac_can_clean_event for classic CAN instances.
 void smac_can_clean_event(smacCan_t can)
 {
+    assert(can != NULL);
     stm32_device_event_queue_free((stm32Device_t*)can);
 }
 
@@ -72,9 +76,11 @@ void smac_can_clean_event(smacCan_t can)
 smacRetCode_t smac_can_active(smacCan_t can)
 {
     stm32Device_t* device = (stm32Device_t*)can;
-    return (device != NULL) && (device->handle != NULL)
-               ? stm32_cast_code(HAL_CAN_Start(device->handle))
-               : SMAC_RET_NULL_REF;
+
+    assert(device != NULL);
+    assert(device->handle != NULL);
+
+    return stm32_cast_code(HAL_CAN_Start(device->handle));
 }
 
 /// @brief Deactivate a classic CAN instance within the MCU abstraction layer.
@@ -82,9 +88,11 @@ smacRetCode_t smac_can_active(smacCan_t can)
 smacRetCode_t smac_can_deactive(smacCan_t can)
 {
     stm32Device_t* device = (stm32Device_t*)can;
-    return (device != NULL) && (device->handle != NULL)
-               ? stm32_cast_code(HAL_CAN_Stop(device->handle))
-               : SMAC_RET_NULL_REF;
+
+    assert(device != NULL);
+    assert(device->handle != NULL);
+
+    return stm32_cast_code(HAL_CAN_Stop(device->handle));
 }
 
 /// @brief Transmit a classic CAN message using the specified classic CAN instance.
@@ -94,10 +102,9 @@ smacRetCode_t smac_can_transmit(smacCan_t can, const smacCanMessage* message, ui
     CAN_TxHeaderTypeDef head;
     stm32Device_t* device = (stm32Device_t*)can;
 
-    if ((device == NULL) || (device->handle == NULL) || (message == NULL))
-    {
-        return SMAC_RET_PARAM_ERR;
-    }
+    assert(device != NULL);
+    assert(device->handle != NULL);
+    assert(message != NULL);
 
     memset(&head, 0, sizeof(head));
 
@@ -147,8 +154,11 @@ static smacRetCode_t smac_can_receive(smacCan_t can, uint32_t channel, smacCanMe
 {
     CAN_RxHeaderTypeDef head;
     stm32Device_t* device = (stm32Device_t*)can;
+    uint32_t start_tick   = HAL_GetTick();
 
-    uint32_t start_tick = HAL_GetTick();
+    assert(device != NULL);
+    assert(device->handle != NULL);
+    assert(message != NULL);
 
     while (HAL_CAN_GetRxFifoFillLevel(device->handle, channel) == 0)
     {
@@ -197,10 +207,9 @@ smacRetCode_t smac_can_async_transmit(smacCan_t can, const smacCanMessage* messa
     CAN_TxHeaderTypeDef head;
     stm32Device_t* device = (stm32Device_t*)can;
 
-    if ((device == NULL) || (device->handle == NULL) || (message == NULL))
-    {
-        return SMAC_RET_PARAM_ERR;
-    }
+    assert(device != NULL);
+    assert(device->handle != NULL);
+    assert(message != NULL);
 
     memset(&head, 0, sizeof(head));
 
@@ -227,10 +236,9 @@ static smacRetCode_t smac_can_async_receive(smacCan_t can, uint32_t channel,
 {
     stm32Device_t* device = (stm32Device_t*)can;
 
-    if ((device == NULL) || (device->handle == NULL) || (message == NULL))
-    {
-        return SMAC_RET_PARAM_ERR;
-    }
+    assert(device != NULL);
+    assert(device->handle != NULL);
+    assert(message != NULL);
 
     memset(message, 0, sizeof(*message));
 
@@ -284,9 +292,15 @@ static void on_rx_fifo_msg_pending_callback(CAN_HandleTypeDef* hcan, uint32_t fi
 
     stm32DeviceEvent_t* event = stm32_device_event_queue_search(hcan);
 
-    if ((event != NULL) && (event->event != NULL) && (event->event->can.rx_complete != NULL))
+    if (event != NULL)
     {
-        event->event->can.rx_complete(event->device, event->event_data);
+        assert(event->device != NULL);
+        assert(event->event != NULL);
+
+        if (event->event->can.rx_complete != NULL)
+        {
+            event->event->can.rx_complete(event->device, event->event_data);
+        }
     }
 }
 
@@ -294,9 +308,15 @@ void HAL_CAN_TxMailbox0CompleteCallback(CAN_HandleTypeDef* hcan)
 {
     stm32DeviceEvent_t* event = stm32_device_event_queue_search(hcan);
 
-    if ((event != NULL) && (event->event != NULL) && (event->event->can.tx_complete != NULL))
+    if (event != NULL)
     {
-        event->event->can.tx_complete(event->device, event->event_data);
+        assert(event->device != NULL);
+        assert(event->event != NULL);
+
+        if (event->event->can.tx_complete != NULL)
+        {
+            event->event->can.tx_complete(event->device, event->event_data);
+        }
     }
 }
 

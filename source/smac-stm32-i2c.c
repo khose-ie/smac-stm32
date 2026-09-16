@@ -1,3 +1,4 @@
+#include <assert.h>
 #include <smac-mcu.h>
 #include <smac-stm32.h>
 #include <stm32.h>
@@ -31,6 +32,7 @@ static uint16_t stm32_cast_i2c_mem_addr_size(smacI2cMemAddrSize mem_addr_size)
 /// associating it with the provided handle.
 smacI2c_t smac_i2c_mem_create(void* handle)
 {
+    assert(handle != NULL);
     return (smacI2c_t)stm32_device_queue_allocate_with_addition(handle, STM32_I2C_ROLE_MEM);
 }
 
@@ -38,6 +40,8 @@ smacI2c_t smac_i2c_mem_create(void* handle)
 /// @details This function releases the resources associated with the specified I2C memory instance.
 void smac_i2c_mem_drop(smacI2c_t i2c)
 {
+    assert(i2c != NULL);
+
     stm32_device_queue_free((stm32Device_t*)i2c);
     stm32_device_event_queue_free((stm32Device_t*)i2c);
 }
@@ -47,6 +51,9 @@ void smac_i2c_mem_drop(smacI2c_t i2c)
 smacRetCode_t smac_i2c_mem_set_event(smacI2c_t i2c, smacI2cMemEvent_t* event,
                                      smacMcuEventData_t data)
 {
+    assert(i2c != NULL);
+    assert(event != NULL);
+
     return stm32_device_event_queue_allocate((stm32Device_t*)i2c, (stm32DeviceEventHandle_t*)event,
                                              data);
 }
@@ -54,6 +61,7 @@ smacRetCode_t smac_i2c_mem_set_event(smacI2c_t i2c, smacI2cMemEvent_t* event,
 /// @brief Clean I2C memory event callbacks for the specified I2C memory instance.
 void smac_i2c_mem_clean_event(smacI2c_t i2c)
 {
+    assert(i2c != NULL);
     stm32_device_event_queue_free((stm32Device_t*)i2c);
 }
 
@@ -65,10 +73,8 @@ smacRetCode_t smac_i2c_mem_selected_device_in_ready_state(smacI2c_t i2c, uint16_
 {
     stm32Device_t* device = (stm32Device_t*)i2c;
 
-    if (device == NULL)
-    {
-        return SMAC_RET_NULL_REF;
-    }
+    assert(device != NULL);
+    assert(device->handle != NULL);
 
     if (HAL_I2C_IsDeviceReady(device->handle, address, 1, timeout) == HAL_OK)
     {
@@ -101,6 +107,10 @@ smacRetCode_t smac_i2c_mem_write(smacI2c_t i2c, uint16_t slave, uint16_t mem_add
 {
     stm32Device_t* device = (stm32Device_t*)i2c;
 
+    assert(device != NULL);
+    assert(device->handle != NULL);
+    assert(data != NULL);
+
     smacRetCode_t code = smac_i2c_mem_selected_device_in_ready_state(i2c, slave, timeout);
 
     if (code != SMAC_RET_OK)
@@ -108,11 +118,9 @@ smacRetCode_t smac_i2c_mem_write(smacI2c_t i2c, uint16_t slave, uint16_t mem_add
         return code;
     }
 
-    return (device != NULL) && (device->handle != NULL)
-               ? stm32_cast_code(HAL_I2C_Mem_Write(device->handle, slave, mem_addr,
-                                                   stm32_cast_i2c_mem_addr_size(mem_addr_size),
-                                                   (uint8_t*)data, size, timeout))
-               : SMAC_RET_NULL_REF;
+    return stm32_cast_code(HAL_I2C_Mem_Write(device->handle, slave, mem_addr,
+                                             stm32_cast_i2c_mem_addr_size(mem_addr_size),
+                                             (uint8_t*)data, size, timeout));
 }
 
 /// @brief Read data from the specified I2C memory device.
@@ -124,6 +132,10 @@ smacRetCode_t smac_i2c_mem_read(smacI2c_t i2c, uint16_t slave, uint16_t mem_addr
 {
     stm32Device_t* device = (stm32Device_t*)i2c;
 
+    assert(device != NULL);
+    assert(device->handle != NULL);
+    assert(data != NULL);
+
     smacRetCode_t code = smac_i2c_mem_selected_device_in_ready_state(i2c, slave, timeout);
 
     if (code != SMAC_RET_OK)
@@ -131,11 +143,9 @@ smacRetCode_t smac_i2c_mem_read(smacI2c_t i2c, uint16_t slave, uint16_t mem_addr
         return code;
     }
 
-    return (device != NULL) && (device->handle != NULL)
-               ? stm32_cast_code(HAL_I2C_Mem_Read(device->handle, slave, mem_addr,
-                                                  stm32_cast_i2c_mem_addr_size(mem_addr_size), data,
-                                                  size, timeout))
-               : SMAC_RET_NULL_REF;
+    return stm32_cast_code(HAL_I2C_Mem_Read(device->handle, slave, mem_addr,
+                                            stm32_cast_i2c_mem_addr_size(mem_addr_size), data, size,
+                                            timeout));
 }
 
 /// @brief Asynchronously write data to the specified I2C memory device.
@@ -148,16 +158,17 @@ smacRetCode_t smac_i2c_mem_async_write(smacI2c_t i2c, uint16_t slave, uint16_t m
     stm32Device_t* device     = (stm32Device_t*)i2c;
     I2C_HandleTypeDef* handle = device->handle;
 
-    return (device != NULL) && (device->handle != NULL)
-               ? stm32_cast_code(
-                     handle->hdmatx == NULL
-                         ? HAL_I2C_Mem_Write_IT(handle, slave, mem_addr,
-                                                stm32_cast_i2c_mem_addr_size(mem_addr_size),
-                                                (uint8_t*)data, size)
-                         : HAL_I2C_Mem_Write_DMA(handle, slave, mem_addr,
-                                                 stm32_cast_i2c_mem_addr_size(mem_addr_size),
-                                                 (uint8_t*)data, size))
-               : SMAC_RET_NULL_REF;
+    assert(device != NULL);
+    assert(device->handle != NULL);
+    assert(data != NULL);
+
+    return stm32_cast_code(handle->hdmatx == NULL
+                               ? HAL_I2C_Mem_Write_IT(handle, slave, mem_addr,
+                                                      stm32_cast_i2c_mem_addr_size(mem_addr_size),
+                                                      (uint8_t*)data, size)
+                               : HAL_I2C_Mem_Write_DMA(handle, slave, mem_addr,
+                                                       stm32_cast_i2c_mem_addr_size(mem_addr_size),
+                                                       (uint8_t*)data, size));
 }
 
 /// @brief Asynchronously read data from the specified I2C memory device.
@@ -170,15 +181,16 @@ smacRetCode_t smac_i2c_mem_async_read(smacI2c_t i2c, uint16_t slave, uint16_t me
     stm32Device_t* device     = (stm32Device_t*)i2c;
     I2C_HandleTypeDef* handle = device->handle;
 
-    return (device != NULL) && (device->handle != NULL)
-               ? stm32_cast_code(handle->hdmarx == NULL
-                                     ? HAL_I2C_Mem_Read_IT(
-                                           handle, slave, mem_addr,
-                                           stm32_cast_i2c_mem_addr_size(mem_addr_size), data, size)
-                                     : HAL_I2C_Mem_Read_DMA(
-                                           handle, slave, mem_addr,
-                                           stm32_cast_i2c_mem_addr_size(mem_addr_size), data, size))
-               : SMAC_RET_NULL_REF;
+    assert(device != NULL);
+    assert(device->handle != NULL);
+    assert(data != NULL);
+
+    return stm32_cast_code(
+        handle->hdmarx == NULL
+            ? HAL_I2C_Mem_Read_IT(handle, slave, mem_addr,
+                                  stm32_cast_i2c_mem_addr_size(mem_addr_size), data, size)
+            : HAL_I2C_Mem_Read_DMA(handle, slave, mem_addr,
+                                   stm32_cast_i2c_mem_addr_size(mem_addr_size), data, size));
 }
 
 /// ===============================================================================================
@@ -191,6 +203,7 @@ smacRetCode_t smac_i2c_mem_async_read(smacI2c_t i2c, uint16_t slave, uint16_t me
 /// associating it with the provided handle.
 smacI2c_t smac_i2c_master_create(void* handle)
 {
+    assert(handle != NULL);
     return (smacI2c_t)stm32_device_queue_allocate_with_addition(handle, STM32_I2C_ROLE_MASTER);
 }
 
@@ -198,6 +211,8 @@ smacI2c_t smac_i2c_master_create(void* handle)
 /// @details This function releases the resources associated with the specified I2C master instance.
 void smac_i2c_master_drop(smacI2c_t i2c)
 {
+    assert(i2c != NULL);
+
     stm32_device_queue_free((stm32Device_t*)i2c);
     stm32_device_event_queue_free((stm32Device_t*)i2c);
 }
@@ -207,6 +222,9 @@ void smac_i2c_master_drop(smacI2c_t i2c)
 smacRetCode_t smac_i2c_master_set_event(smacI2c_t i2c, smacI2cMasterEvent_t* event,
                                         smacMcuEventData_t data)
 {
+    assert(i2c != NULL);
+    assert(event != NULL);
+
     return stm32_device_event_queue_allocate((stm32Device_t*)i2c, (stm32DeviceEventHandle_t*)event,
                                              data);
 }
@@ -216,6 +234,7 @@ smacRetCode_t smac_i2c_master_set_event(smacI2c_t i2c, smacI2cMasterEvent_t* eve
 /// instance.
 void smac_i2c_master_clean_event(smacI2c_t i2c)
 {
+    assert(i2c != NULL);
     stm32_device_event_queue_free((stm32Device_t*)i2c);
 }
 
@@ -227,10 +246,8 @@ smacRetCode_t smac_i2c_master_selected_device_in_ready_state(smacI2c_t i2c, uint
 {
     stm32Device_t* device = (stm32Device_t*)i2c;
 
-    if (device == NULL)
-    {
-        return SMAC_RET_NULL_REF;
-    }
+    assert(device != NULL);
+    assert(device->handle != NULL);
 
     if (HAL_I2C_IsDeviceReady(device->handle, slave, 1, timeout) == HAL_OK)
     {
@@ -261,6 +278,10 @@ smacRetCode_t smac_i2c_master_transmit(smacI2c_t i2c, uint16_t slave, const uint
 {
     stm32Device_t* device = (stm32Device_t*)i2c;
 
+    assert(device != NULL);
+    assert(device->handle != NULL);
+    assert(data != NULL);
+
     smacRetCode_t code = smac_i2c_master_selected_device_in_ready_state(i2c, slave, timeout);
 
     if (code != SMAC_RET_OK)
@@ -281,6 +302,10 @@ smacRetCode_t smac_i2c_master_receive(smacI2c_t i2c, uint16_t slave, uint8_t* da
                                       uint32_t timeout)
 {
     stm32Device_t* device = (stm32Device_t*)i2c;
+
+    assert(device != NULL);
+    assert(device->handle != NULL);
+    assert(data != NULL);
 
     smacRetCode_t code = smac_i2c_master_selected_device_in_ready_state(i2c, slave, timeout);
 
@@ -303,12 +328,13 @@ smacRetCode_t smac_i2c_master_async_transmit(smacI2c_t i2c, uint16_t slave, cons
     stm32Device_t* device     = (stm32Device_t*)i2c;
     I2C_HandleTypeDef* handle = device->handle;
 
-    return (device != NULL) && (device->handle != NULL)
-               ? stm32_cast_code(
-                     handle->hdmatx == NULL
-                         ? HAL_I2C_Master_Transmit_IT(handle, slave, (uint8_t*)data, size)
-                         : HAL_I2C_Master_Transmit_DMA(handle, slave, (uint8_t*)data, size))
-               : SMAC_RET_NULL_REF;
+    assert(device != NULL);
+    assert(device->handle != NULL);
+    assert(data != NULL);
+
+    return stm32_cast_code(handle->hdmatx == NULL
+                               ? HAL_I2C_Master_Transmit_IT(handle, slave, (uint8_t*)data, size)
+                               : HAL_I2C_Master_Transmit_DMA(handle, slave, (uint8_t*)data, size));
 }
 
 /// @brief Asynchronously receive data over the specified I2C master instance.
@@ -320,11 +346,13 @@ smacRetCode_t smac_i2c_master_async_receive(smacI2c_t i2c, uint16_t slave, uint8
     stm32Device_t* device     = (stm32Device_t*)i2c;
     I2C_HandleTypeDef* handle = device->handle;
 
-    return (device != NULL) && (device->handle != NULL)
-               ? stm32_cast_code(handle->hdmarx == NULL
-                                     ? HAL_I2C_Master_Receive_IT(handle, slave, data, size)
-                                     : HAL_I2C_Master_Receive_DMA(handle, slave, data, size))
-               : SMAC_RET_NULL_REF;
+    assert(device != NULL);
+    assert(device->handle != NULL);
+    assert(data != NULL);
+
+    return stm32_cast_code(handle->hdmarx == NULL
+                               ? HAL_I2C_Master_Receive_IT(handle, slave, data, size)
+                               : HAL_I2C_Master_Receive_DMA(handle, slave, data, size));
 }
 
 /// ===============================================================================================
@@ -337,6 +365,7 @@ smacRetCode_t smac_i2c_master_async_receive(smacI2c_t i2c, uint16_t slave, uint8
 /// associating it with the provided handle.
 smacI2c_t smac_i2c_slave_create(void* handle)
 {
+    assert(handle != NULL);
     return (smacI2c_t)stm32_device_queue_allocate_with_addition(handle, STM32_I2C_ROLE_SLAVE);
 }
 
@@ -345,6 +374,8 @@ smacI2c_t smac_i2c_slave_create(void* handle)
 /// @param i2c The I2C slave instance to be dropped.
 void smac_i2c_slave_drop(smacI2c_t i2c)
 {
+    assert(i2c != NULL);
+
     stm32_device_queue_free((stm32Device_t*)i2c);
     stm32_device_event_queue_free((stm32Device_t*)i2c);
 }
@@ -353,6 +384,9 @@ void smac_i2c_slave_drop(smacI2c_t i2c)
 smacRetCode_t smac_i2c_slave_set_event(smacI2c_t i2c, smacI2cSlaveEvent_t* event,
                                        smacMcuEventData_t data)
 {
+    assert(i2c != NULL);
+    assert(event != NULL);
+
     return stm32_device_event_queue_allocate((stm32Device_t*)i2c, (stm32DeviceEventHandle_t*)event,
                                              data);
 }
@@ -360,6 +394,7 @@ smacRetCode_t smac_i2c_slave_set_event(smacI2c_t i2c, smacI2cSlaveEvent_t* event
 /// @brief Clean I2C slave event callbacks for the specified I2C slave instance.
 void smac_i2c_slave_clean_event(smacI2c_t i2c)
 {
+    assert(i2c != NULL);
     stm32_device_event_queue_free((stm32Device_t*)i2c);
 }
 
@@ -369,9 +404,11 @@ void smac_i2c_slave_clean_event(smacI2c_t i2c)
 smacRetCode_t smac_i2c_slave_listen(smacI2c_t i2c)
 {
     stm32Device_t* device = (stm32Device_t*)i2c;
-    return (device != NULL) && (device->handle != NULL)
-               ? stm32_cast_code(HAL_I2C_EnableListen_IT(device->handle))
-               : SMAC_RET_NULL_REF;
+
+    assert(device != NULL);
+    assert(device->handle != NULL);
+
+    return stm32_cast_code(HAL_I2C_EnableListen_IT(device->handle));
 }
 
 /// @brief Transmit data over the specified I2C slave instance.
@@ -381,10 +418,11 @@ smacRetCode_t smac_i2c_slave_transmit(smacI2c_t i2c, const uint8_t* data, uint32
                                       uint32_t timeout)
 {
     stm32Device_t* device = (stm32Device_t*)i2c;
-    return (device != NULL) && (device->handle != NULL)
-               ? stm32_cast_code(
-                     HAL_I2C_Slave_Transmit(device->handle, (uint8_t*)data, size, timeout))
-               : SMAC_RET_NULL_REF;
+
+    assert(device != NULL);
+    assert(device->handle != NULL);
+
+    return stm32_cast_code(HAL_I2C_Slave_Transmit(device->handle, (uint8_t*)data, size, timeout));
 }
 
 /// @brief Receive data over the specified I2C slave instance.
@@ -393,9 +431,11 @@ smacRetCode_t smac_i2c_slave_transmit(smacI2c_t i2c, const uint8_t* data, uint32
 smacRetCode_t smac_i2c_slave_receive(smacI2c_t i2c, uint8_t* data, uint32_t size, uint32_t timeout)
 {
     stm32Device_t* device = (stm32Device_t*)i2c;
-    return (device != NULL) && (device->handle != NULL)
-               ? stm32_cast_code(HAL_I2C_Slave_Receive(device->handle, data, size, timeout))
-               : SMAC_RET_NULL_REF;
+
+    assert(device != NULL);
+    assert(device->handle != NULL);
+
+    return stm32_cast_code(HAL_I2C_Slave_Receive(device->handle, data, size, timeout));
 }
 
 /// @brief Asynchronously transmit data over the specified I2C slave instance.
@@ -406,12 +446,13 @@ smacRetCode_t smac_i2c_slave_async_transmit(smacI2c_t i2c, const uint8_t* data, 
     stm32Device_t* device     = (stm32Device_t*)i2c;
     I2C_HandleTypeDef* handle = device->handle;
 
-    return (device != NULL) && (device->handle != NULL)
-               ? stm32_cast_code(
-                     handle->hdmatx == NULL
-                         ? HAL_I2C_Slave_Transmit_IT(device->handle, (uint8_t*)data, size)
-                         : HAL_I2C_Slave_Transmit_DMA(handle, (uint8_t*)data, size))
-               : SMAC_RET_NULL_REF;
+    assert(device != NULL);
+    assert(device->handle != NULL);
+    assert(data != NULL);
+
+    return stm32_cast_code(handle->hdmatx == NULL
+                               ? HAL_I2C_Slave_Transmit_IT(device->handle, (uint8_t*)data, size)
+                               : HAL_I2C_Slave_Transmit_DMA(handle, (uint8_t*)data, size));
 }
 
 /// @brief Asynchronously receive data over the specified I2C slave instance.
@@ -422,11 +463,12 @@ smacRetCode_t smac_i2c_slave_async_receive(smacI2c_t i2c, uint8_t* data, uint32_
     stm32Device_t* device     = (stm32Device_t*)i2c;
     I2C_HandleTypeDef* handle = device->handle;
 
-    return (device != NULL) && (device->handle != NULL)
-               ? stm32_cast_code(handle->hdmarx == NULL
-                                     ? HAL_I2C_Slave_Receive_IT(handle, data, size)
-                                     : HAL_I2C_Slave_Receive_DMA(handle, data, size))
-               : SMAC_RET_NULL_REF;
+    assert(device != NULL);
+    assert(device->handle != NULL);
+    assert(data != NULL);
+
+    return stm32_cast_code(handle->hdmarx == NULL ? HAL_I2C_Slave_Receive_IT(handle, data, size)
+                                                  : HAL_I2C_Slave_Receive_DMA(handle, data, size));
 }
 
 /// ===============================================================================================
@@ -438,9 +480,15 @@ void HAL_I2C_MasterTxCpltCallback(I2C_HandleTypeDef* hi2c)
 {
     stm32DeviceEvent_t* event = stm32_device_event_queue_search((stm32DeviceHandle_t)hi2c);
 
-    if ((event != NULL) && (event->event != NULL) && (event->event->i2c_master.tx_complete != NULL))
+    if (event != NULL)
     {
-        event->event->i2c_master.tx_complete((smacI2c_t)event->device, event->event_data);
+        assert(event->device != NULL);
+        assert(event->event != NULL);
+
+        if (event->event->i2c_master.tx_complete != NULL)
+        {
+            event->event->i2c_master.tx_complete((smacI2c_t)event->device, event->event_data);
+        }
     }
 }
 
@@ -448,9 +496,15 @@ void HAL_I2C_MasterRxCpltCallback(I2C_HandleTypeDef* hi2c)
 {
     stm32DeviceEvent_t* event = stm32_device_event_queue_search((stm32DeviceHandle_t)hi2c);
 
-    if ((event != NULL) && (event->event != NULL) && (event->event->i2c_master.rx_complete != NULL))
+    if (event != NULL)
     {
-        event->event->i2c_master.rx_complete((smacI2c_t)event->device, event->event_data);
+        assert(event->device != NULL);
+        assert(event->event != NULL);
+
+        if (event->event->i2c_master.rx_complete != NULL)
+        {
+            event->event->i2c_master.rx_complete((smacI2c_t)event->device, event->event_data);
+        }
     }
 }
 
@@ -458,10 +512,15 @@ void HAL_I2C_SlaveTxCpltCallback(I2C_HandleTypeDef* hi2c)
 {
     stm32DeviceEvent_t* event = stm32_device_event_queue_search((stm32DeviceHandle_t*)hi2c);
 
-    if ((event != NULL) && (event->event != NULL) && (event->event->i2c_slave.tx_complete != NULL))
+    if (event != NULL)
     {
-        event->event->i2c_slave.tx_complete((smacI2c_t)event->device,
-                                            (smacMcuEventData_t)event->event_data);
+        assert(event->device != NULL);
+        assert(event->event != NULL);
+
+        if (event->event->i2c_slave.tx_complete != NULL)
+        {
+            event->event->i2c_slave.tx_complete((smacI2c_t)event->device, event->event_data);
+        }
     }
 }
 
@@ -469,10 +528,15 @@ void HAL_I2C_SlaveRxCpltCallback(I2C_HandleTypeDef* hi2c)
 {
     stm32DeviceEvent_t* event = stm32_device_event_queue_search((stm32DeviceHandle_t*)hi2c);
 
-    if ((event != NULL) && (event->event != NULL) && (event->event->i2c_slave.rx_complete != NULL))
+    if (event != NULL)
     {
-        event->event->i2c_slave.rx_complete((smacI2c_t)event->device,
-                                            (smacMcuEventData_t)event->event_data);
+        assert(event->device != NULL);
+        assert(event->event != NULL);
+
+        if (event->event->i2c_slave.rx_complete != NULL)
+        {
+            event->event->i2c_slave.rx_complete((smacI2c_t)event->device, event->event_data);
+        }
     }
 }
 
@@ -481,10 +545,15 @@ void HAL_I2C_AddrCallback(I2C_HandleTypeDef* hi2c, uint8_t TransferDirection,
 {
     stm32DeviceEvent_t* event = stm32_device_event_queue_search((stm32DeviceHandle_t*)hi2c);
 
-    if ((event != NULL) && (event->event != NULL) && (event->event->i2c_slave.selected != NULL))
+    if (event != NULL)
     {
-        event->event->i2c_slave.selected((smacI2c_t)event->device,
-                                         (smacMcuEventData_t)event->event_data);
+        assert(event->device != NULL);
+        assert(event->event != NULL);
+
+        if (event->event->i2c_slave.selected != NULL)
+        {
+            event->event->i2c_slave.selected((smacI2c_t)event->device, event->event_data);
+        }
     }
 }
 
@@ -492,11 +561,15 @@ void HAL_I2C_ListenCpltCallback(I2C_HandleTypeDef* hi2c)
 {
     stm32DeviceEvent_t* event = stm32_device_event_queue_search((stm32DeviceHandle_t*)hi2c);
 
-    if ((event != NULL) && (event->event != NULL) &&
-        (event->event->i2c_slave.listen_complete != NULL))
+    if (event != NULL)
     {
-        event->event->i2c_slave.listen_complete((smacI2c_t)event->device,
-                                                (smacMcuEventData_t)event->event_data);
+        assert(event->device != NULL);
+        assert(event->event != NULL);
+
+        if (event->event->i2c_slave.listen_complete != NULL)
+        {
+            event->event->i2c_slave.listen_complete((smacI2c_t)event->device, event->event_data);
+        }
     }
 }
 
@@ -504,9 +577,15 @@ void HAL_I2C_MemTxCpltCallback(I2C_HandleTypeDef* hi2c)
 {
     stm32DeviceEvent_t* event = stm32_device_event_queue_search((stm32DeviceHandle_t)hi2c);
 
-    if ((event != NULL) && (event->event != NULL) && (event->event->i2c_mem.write_complete != NULL))
+    if (event != NULL)
     {
-        event->event->i2c_mem.write_complete((smacI2c_t)event->device, event->event_data);
+        assert(event->device != NULL);
+        assert(event->event != NULL);
+
+        if (event->event->i2c_mem.write_complete != NULL)
+        {
+            event->event->i2c_mem.write_complete((smacI2c_t)event->device, event->event_data);
+        }
     }
 }
 
@@ -514,9 +593,15 @@ void HAL_I2C_MemRxCpltCallback(I2C_HandleTypeDef* hi2c)
 {
     stm32DeviceEvent_t* event = stm32_device_event_queue_search((stm32DeviceHandle_t)hi2c);
 
-    if ((event != NULL) && (event->event != NULL) && (event->event->i2c_mem.read_complete != NULL))
+    if (event != NULL)
     {
-        event->event->i2c_mem.read_complete((smacI2c_t)event->device, event->event_data);
+        assert(event->device != NULL);
+        assert(event->event != NULL);
+
+        if (event->event->i2c_mem.read_complete != NULL)
+        {
+            event->event->i2c_mem.read_complete((smacI2c_t)event->device, event->event_data);
+        }
     }
 }
 
@@ -526,22 +611,31 @@ void HAL_I2C_ErrorCallback(I2C_HandleTypeDef* hi2c)
 {
     stm32DeviceEvent_t* event = stm32_device_event_queue_search((stm32DeviceHandle_t)hi2c);
 
-    if ((event != NULL) && (event->event != NULL))
+    if (event != NULL)
     {
-        if (((event->device->addition & STM32_I2C_ROLE_MASK) == STM32_I2C_ROLE_MEM) &&
-            (event->event->i2c_mem.error != NULL))
+        assert(event->device != NULL);
+        assert(event->event != NULL);
+
+        if ((event->device->addition & STM32_I2C_ROLE_MASK) == STM32_I2C_ROLE_MEM)
         {
-            event->event->i2c_mem.error((smacI2c_t)event->device, event->event_data);
+            if (event->event->i2c_mem.error != NULL)
+            {
+                event->event->i2c_mem.error((smacI2c_t)event->device, event->event_data);
+            }
         }
-        else if (((event->device->addition & STM32_I2C_ROLE_MASK) == STM32_I2C_ROLE_MASTER) &&
-                 (event->event->i2c_master.error != NULL))
+        else if ((event->device->addition & STM32_I2C_ROLE_MASK) == STM32_I2C_ROLE_MASTER)
         {
-            event->event->i2c_master.error((smacI2c_t)event->device, event->event_data);
+            if (event->event->i2c_master.error != NULL)
+            {
+                event->event->i2c_master.error((smacI2c_t)event->device, event->event_data);
+            }
         }
-        else if (((event->device->addition & STM32_I2C_ROLE_MASK) == STM32_I2C_ROLE_SLAVE) &&
-                 (event->event->i2c_slave.error != NULL))
+        else if ((event->device->addition & STM32_I2C_ROLE_MASK) == STM32_I2C_ROLE_SLAVE)
         {
-            event->event->i2c_slave.error((smacI2c_t)event->device, event->event_data);
+            if (event->event->i2c_slave.error != NULL)
+            {
+                event->event->i2c_slave.error((smacI2c_t)event->device, event->event_data);
+            }
         }
     }
 }

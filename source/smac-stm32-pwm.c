@@ -1,3 +1,4 @@
+#include <assert.h>
 #include <smac-mcu.h>
 #include <smac-stm32.h>
 #include <stm32.h>
@@ -7,6 +8,7 @@
 /// with the provided handle and channel.
 smacPwm_t smac_pwm_create(void* handle)
 {
+    assert(handle != NULL);
     return (smacPwm_t)stm32_device_queue_allocate(handle);
 }
 
@@ -14,6 +16,8 @@ smacPwm_t smac_pwm_create(void* handle)
 /// @details This function releases the resources associated with the specified PWM instance.
 void smac_pwm_drop(smacPwm_t pwm)
 {
+    assert(pwm != NULL);
+
     stm32_device_queue_free((stm32Device_t*)pwm);
     stm32_device_event_queue_free((stm32Device_t*)pwm);
 }
@@ -21,6 +25,9 @@ void smac_pwm_drop(smacPwm_t pwm)
 /// @brief Set PWM event callbacks for the specified PWM instance.
 smacRetCode_t smac_pwm_set_event(smacPwm_t pwm, smacPwmEvent_t* event, smacMcuEventData_t data)
 {
+    assert(pwm != NULL);
+    assert(event != NULL);
+
     return stm32_device_event_queue_allocate((stm32Device_t*)pwm, (stm32DeviceEventHandle_t*)event,
                                              data);
 }
@@ -28,6 +35,7 @@ smacRetCode_t smac_pwm_set_event(smacPwm_t pwm, smacPwmEvent_t* event, smacMcuEv
 /// @brief Clean PWM event callbacks for the specified PWM instance.
 void smac_pwm_clean_event(smacPwm_t pwm)
 {
+    assert(pwm != NULL);
     stm32_device_event_queue_free((stm32Device_t*)pwm);
 }
 
@@ -36,9 +44,11 @@ void smac_pwm_clean_event(smacPwm_t pwm)
 smacRetCode_t smac_pwm_activate(smacPwm_t pwm, uint32_t channel)
 {
     stm32Device_t* device = (stm32Device_t*)pwm;
-    return (device != NULL) && (device->handle != NULL)
-               ? stm32_cast_code(HAL_TIM_PWM_Start(device->handle, channel))
-               : SMAC_RET_NULL_REF;
+
+    assert(device != NULL);
+    assert(device->handle != NULL);
+
+    return stm32_cast_code(HAL_TIM_PWM_Start(device->handle, channel));
 }
 
 /// @brief Deactivate the specified PWM instance.
@@ -46,9 +56,11 @@ smacRetCode_t smac_pwm_activate(smacPwm_t pwm, uint32_t channel)
 smacRetCode_t smac_pwm_deactivate(smacPwm_t pwm, uint32_t channel)
 {
     stm32Device_t* device = (stm32Device_t*)pwm;
-    return (device != NULL) && (device->handle != NULL)
-               ? stm32_cast_code(HAL_TIM_PWM_Stop(device->handle, channel))
-               : SMAC_RET_NULL_REF;
+
+    assert(device != NULL);
+    assert(device->handle != NULL);
+
+    return stm32_cast_code(HAL_TIM_PWM_Stop(device->handle, channel));
 }
 
 /// @brief Asynchronously activate the specified PWM instance.
@@ -57,9 +69,11 @@ smacRetCode_t smac_pwm_deactivate(smacPwm_t pwm, uint32_t channel)
 smacRetCode_t smac_pwm_async_activate(smacPwm_t pwm, uint32_t channel)
 {
     stm32Device_t* device = (stm32Device_t*)pwm;
-    return (device != NULL) && (device->handle != NULL)
-               ? stm32_cast_code(HAL_TIM_PWM_Start_IT(device->handle, channel))
-               : SMAC_RET_NULL_REF;
+
+    assert(device != NULL);
+    assert(device->handle != NULL);
+
+    return stm32_cast_code(HAL_TIM_PWM_Start_IT(device->handle, channel));
 }
 
 /// @brief Asynchronously deactivate the specified PWM instance.
@@ -68,9 +82,11 @@ smacRetCode_t smac_pwm_async_activate(smacPwm_t pwm, uint32_t channel)
 smacRetCode_t smac_pwm_async_deactivate(smacPwm_t pwm, uint32_t channel)
 {
     stm32Device_t* device = (stm32Device_t*)pwm;
-    return (device != NULL) && (device->handle != NULL)
-               ? stm32_cast_code(HAL_TIM_PWM_Stop_IT(device->handle, channel))
-               : SMAC_RET_NULL_REF;
+
+    assert(device != NULL);
+    assert(device->handle != NULL);
+
+    return stm32_cast_code(HAL_TIM_PWM_Stop_IT(device->handle, channel));
 }
 
 /// @brief Asynchronously activate the specified PWM instance with the provided data.
@@ -80,9 +96,11 @@ smacRetCode_t smac_pwm_async_activate_data(smacPwm_t pwm, uint32_t channel, cons
                                            uint16_t size)
 {
     stm32Device_t* device = (stm32Device_t*)pwm;
-    return (device != NULL) && (device->handle != NULL)
-               ? stm32_cast_code(HAL_TIM_PWM_Start_DMA(device->handle, channel, data, size))
-               : SMAC_RET_NULL_REF;
+
+    assert(device != NULL);
+    assert(device->handle != NULL);
+
+    return stm32_cast_code(HAL_TIM_PWM_Start_DMA(device->handle, channel, data, size));
 }
 
 /// @brief Asynchronously deactivate the specified PWM instance with the provided data.
@@ -91,9 +109,11 @@ smacRetCode_t smac_pwm_async_activate_data(smacPwm_t pwm, uint32_t channel, cons
 smacRetCode_t smac_pwm_async_deactivate_data(smacPwm_t pwm, uint32_t channel)
 {
     stm32Device_t* device = (stm32Device_t*)pwm;
-    return (device != NULL) && (device->handle != NULL)
-               ? stm32_cast_code(HAL_TIM_PWM_Stop_DMA(device->handle, channel))
-               : SMAC_RET_NULL_REF;
+
+    assert(device != NULL);
+    assert(device->handle != NULL);
+
+    return stm32_cast_code(HAL_TIM_PWM_Stop_DMA(device->handle, channel));
 }
 
 /// ===============================================================================================
@@ -105,9 +125,15 @@ void HAL_TIM_PWM_PulseFinishedCallback(TIM_HandleTypeDef* htim)
 {
     stm32DeviceEvent_t* event = stm32_device_event_queue_search((stm32DeviceHandle_t)htim);
 
-    if ((event != NULL) && (event->event != NULL) && (event->event->pwm.pulse_complete != NULL))
+    if (event != NULL)
     {
-        event->event->pwm.pulse_complete(event->device, htim->Channel, event->event_data);
+        assert(event->device != NULL);
+        assert(event->event != NULL);
+
+        if (event->event->pwm.pulse_complete != NULL)
+        {
+            event->event->pwm.pulse_complete(event->device, htim->Channel, event->event_data);
+        }
     }
 }
 

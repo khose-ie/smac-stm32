@@ -1,3 +1,4 @@
+#include <assert.h>
 #include <smac-mcu.h>
 #include <smac-stm32.h>
 #include <stddef.h>
@@ -130,6 +131,8 @@ smacRetCode_t smac_flash_erase(uint32_t bank, uint32_t sector, uint32_t num)
 smacRetCode_t smac_flash_write(uint32_t bank, uint32_t address, const uint8_t* data, uint32_t size)
 {
     (void)bank;
+
+    assert(data != NULL);
 
     uint32_t width = main_flash_choice_data_width(address, size);
 

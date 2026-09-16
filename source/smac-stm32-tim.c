@@ -1,3 +1,4 @@
+#include <assert.h>
 #include <smac-mcu.h>
 #include <smac-stm32.h>
 #include <stm32.h>
@@ -7,6 +8,7 @@
 /// with the provided handle.
 smacTim_t smac_tim_create(void* handle)
 {
+    assert(handle != NULL);
     return (smacTim_t)stm32_device_queue_allocate(handle);
 }
 
@@ -14,6 +16,8 @@ smacTim_t smac_tim_create(void* handle)
 /// @details This function releases the resources associated with the specified Timer instance.
 void smac_tim_drop(smacTim_t tim)
 {
+    assert(tim != NULL);
+
     stm32_device_queue_free((stm32Device_t*)tim);
     stm32_device_cache_queue_free((stm32Device_t*)tim);
 }
@@ -22,6 +26,9 @@ void smac_tim_drop(smacTim_t tim)
 smacRetCode_t smac_tim_set_event(smacTim_t tim, smacTimEvent_t* event,
                                  smacMcuEventData_t event_data)
 {
+    assert(tim != NULL);
+    assert(event != NULL);
+
     return stm32_device_event_queue_allocate((stm32Device_t*)tim, (stm32DeviceEventHandle_t*)event,
                                              event_data);
 }
@@ -29,6 +36,7 @@ smacRetCode_t smac_tim_set_event(smacTim_t tim, smacTimEvent_t* event,
 /// @brief Clean Timer event callbacks for the specified Timer instance.
 void smac_tim_clean_event(smacTim_t tim)
 {
+    assert(tim != NULL);
     stm32_device_event_queue_free((stm32Device_t*)tim);
 }
 
@@ -38,6 +46,10 @@ void smac_tim_clean_event(smacTim_t tim)
 uint32_t smac_tim_count(smacTim_t tim)
 {
     stm32Device_t* device = (stm32Device_t*)tim;
+
+    assert(device != NULL);
+    assert(device->handle != NULL);
+
     return __HAL_TIM_GET_COUNTER((TIM_HandleTypeDef*)device->handle);
 }
 
@@ -46,9 +58,11 @@ uint32_t smac_tim_count(smacTim_t tim)
 smacRetCode_t smac_tim_activate(smacTim_t tim)
 {
     stm32Device_t* device = (stm32Device_t*)tim;
-    return (device != NULL) && (device->handle != NULL)
-               ? stm32_cast_code(HAL_TIM_Base_Start(device->handle))
-               : SMAC_RET_NULL_REF;
+
+    assert(device != NULL);
+    assert(device->handle != NULL);
+
+    return stm32_cast_code(HAL_TIM_Base_Start(device->handle));
 }
 
 /// @brief Deactivate the specified Timer instance.
@@ -56,9 +70,11 @@ smacRetCode_t smac_tim_activate(smacTim_t tim)
 smacRetCode_t smac_tim_deactivate(smacTim_t tim)
 {
     stm32Device_t* device = (stm32Device_t*)tim;
-    return (device != NULL) && (device->handle != NULL)
-               ? stm32_cast_code(HAL_TIM_Base_Stop(device->handle))
-               : SMAC_RET_NULL_REF;
+
+    assert(device != NULL);
+    assert(device->handle != NULL);
+
+    return stm32_cast_code(HAL_TIM_Base_Stop(device->handle));
 }
 
 /// @brief Asynchronously activate the specified Timer instance.
@@ -67,9 +83,11 @@ smacRetCode_t smac_tim_deactivate(smacTim_t tim)
 smacRetCode_t smac_tim_async_activate(smacTim_t tim)
 {
     stm32Device_t* device = (stm32Device_t*)tim;
-    return (device != NULL) && (device->handle != NULL)
-               ? stm32_cast_code(HAL_TIM_Base_Start_IT(device->handle))
-               : SMAC_RET_NULL_REF;
+
+    assert(device != NULL);
+    assert(device->handle != NULL);
+
+    return stm32_cast_code(HAL_TIM_Base_Start_IT(device->handle));
 }
 
 /// @brief Asynchronously deactivate the specified Timer instance.
@@ -78,9 +96,11 @@ smacRetCode_t smac_tim_async_activate(smacTim_t tim)
 smacRetCode_t smac_tim_async_deactivate(smacTim_t tim)
 {
     stm32Device_t* device = (stm32Device_t*)tim;
-    return (device != NULL) && (device->handle != NULL)
-               ? stm32_cast_code(HAL_TIM_Base_Stop_IT(device->handle))
-               : SMAC_RET_NULL_REF;
+
+    assert(device != NULL);
+    assert(device->handle != NULL);
+
+    return stm32_cast_code(HAL_TIM_Base_Stop_IT(device->handle));
 }
 
 /// @brief Asynchronously activate the specified Timer instance with associated data.
@@ -89,9 +109,12 @@ smacRetCode_t smac_tim_async_deactivate(smacTim_t tim)
 smacRetCode_t smac_tim_async_activate_data(smacTim_t tim, const uint32_t* data, uint16_t size)
 {
     stm32Device_t* device = (stm32Device_t*)tim;
-    return (device != NULL) && (device->handle != NULL)
-               ? stm32_cast_code(HAL_TIM_Base_Start_DMA(device->handle, data, size))
-               : SMAC_RET_NULL_REF;
+
+    assert(device != NULL);
+    assert(device->handle != NULL);
+    assert(data != NULL);
+
+    return stm32_cast_code(HAL_TIM_Base_Start_DMA(device->handle, data, size));
 }
 
 /// @brief Asynchronously deactivate the specified Timer instance with associated data.
@@ -100,7 +123,9 @@ smacRetCode_t smac_tim_async_activate_data(smacTim_t tim, const uint32_t* data, 
 smacRetCode_t smac_tim_async_deactivate_data(smacTim_t tim)
 {
     stm32Device_t* device = (stm32Device_t*)tim;
-    return (device != NULL) && (device->handle != NULL)
-               ? stm32_cast_code(HAL_TIM_Base_Stop_DMA(device->handle))
-               : SMAC_RET_NULL_REF;
+
+    assert(device != NULL);
+    assert(device->handle != NULL);
+
+    return stm32_cast_code(HAL_TIM_Base_Stop_DMA(device->handle));
 }

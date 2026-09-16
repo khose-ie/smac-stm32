@@ -1,3 +1,4 @@
+#include <assert.h>
 #include <smac-mcu.h>
 #include <smac-stm32.h>
 #include <stm32.h>
@@ -43,7 +44,8 @@
 /// @details The specific implementation of @ref smac_can_fd_create.
 smacCanFd_t smac_can_fd_create(void* handle)
 {
-    // Allocate a device from the STM32 device queue for the classic CAN instance.
+    assert(handle != NULL);
+
     stm32Device_t* device = stm32_device_queue_allocate_with_addition(handle, CAN_FD_ROLE_FD);
 
     if (device == NULL)
@@ -64,6 +66,8 @@ smacCanFd_t smac_can_fd_create(void* handle)
 /// @details The specific implementation of @ref smac_can_fd_drop.
 void smac_can_fd_drop(smacCanFd_t canfd)
 {
+    assert(canfd != NULL);
+
     stm32_device_event_queue_free((stm32Device_t*)canfd);
     stm32_device_cache_queue_free((stm32Device_t*)canfd);
     stm32_device_queue_free((stm32Device_t*)canfd);
@@ -74,6 +78,9 @@ void smac_can_fd_drop(smacCanFd_t canfd)
 smacRetCode_t smac_can_fd_set_event(smacCanFd_t canfd, smacCanFdEvent_t* event,
                                     smacMcuEventData_t data)
 {
+    assert(canfd != NULL);
+    assert(event != NULL);
+
     return stm32_device_event_queue_allocate((stm32Device_t*)canfd,
                                              (stm32DeviceEventHandle_t*)event, data);
 }
@@ -82,6 +89,7 @@ smacRetCode_t smac_can_fd_set_event(smacCanFd_t canfd, smacCanFdEvent_t* event,
 /// @details The specific implementation of @ref smac_can_fd_clean_event.
 void smac_can_fd_clean_event(smacCanFd_t canfd)
 {
+    assert(canfd != NULL);
     stm32_device_event_queue_free((stm32Device_t*)canfd);
 }
 
@@ -90,9 +98,11 @@ void smac_can_fd_clean_event(smacCanFd_t canfd)
 smacRetCode_t smac_can_fd_active(smacCanFd_t canfd)
 {
     stm32Device_t* device = (stm32Device_t*)canfd;
-    return (device != NULL) && (device->handle != NULL)
-               ? stm32_cast_code(HAL_FDCAN_Start(device->handle))
-               : SMAC_RET_NULL_REF;
+
+    assert(device != NULL);
+    assert(device->handle != NULL);
+
+    return stm32_cast_code(HAL_FDCAN_Start(device->handle));
 }
 
 /// @brief Deactivate a CAN FD message using the specified CAN FD instance.
@@ -100,9 +110,11 @@ smacRetCode_t smac_can_fd_active(smacCanFd_t canfd)
 smacRetCode_t smac_can_fd_deactive(smacCanFd_t canfd)
 {
     stm32Device_t* device = (stm32Device_t*)canfd;
-    return (device != NULL) && (device->handle != NULL)
-               ? stm32_cast_code(HAL_FDCAN_Stop(device->handle))
-               : SMAC_RET_NULL_REF;
+
+    assert(device != NULL);
+    assert(device->handle != NULL);
+
+    return stm32_cast_code(HAL_FDCAN_Stop(device->handle));
 }
 
 /// @brief Transmit a CAN FD message using the specified CAN FD instance.
@@ -113,10 +125,9 @@ smacRetCode_t smac_can_fd_transmit(smacCanFd_t canfd, const smacCanFdMessage* me
     FDCAN_TxHeaderTypeDef head;
     stm32Device_t* device = (stm32Device_t*)canfd;
 
-    if ((device == NULL) || (device->handle == NULL) || (message == NULL))
-    {
-        return SMAC_RET_PARAM_ERR;
-    }
+    assert(device != NULL);
+    assert(device->handle != NULL);
+    assert(message != NULL);
 
     memset(&head, 0, sizeof(head));
 
@@ -168,10 +179,9 @@ static smacRetCode_t smac_can_fd_receive(smacCanFd_t canfd, uint32_t channel,
     FDCAN_RxHeaderTypeDef head;
     stm32Device_t* device = (stm32Device_t*)canfd;
 
-    if ((device == NULL) || (device->handle == NULL) || (message == NULL))
-    {
-        return SMAC_RET_PARAM_ERR;
-    }
+    assert(device != NULL);
+    assert(device->handle != NULL);
+    assert(message != NULL);
 
     memset(&head, 0, sizeof(head));
     memset(message, 0, sizeof(*message));
@@ -232,10 +242,9 @@ smacRetCode_t smac_can_fd_async_transmit(smacCanFd_t canfd, const smacCanFdMessa
     FDCAN_TxHeaderTypeDef head;
     stm32Device_t* device = (stm32Device_t*)canfd;
 
-    if ((device == NULL) || (device->handle == NULL) || (message == NULL))
-    {
-        return SMAC_RET_PARAM_ERR;
-    }
+    assert(device != NULL);
+    assert(device->handle != NULL);
+    assert(message != NULL);
 
     memset(&head, 0, sizeof(head));
 
@@ -264,10 +273,9 @@ static smacRetCode_t smac_can_fd_async_receive(smacCanFd_t canfd, uint32_t chann
 {
     stm32Device_t* device = (stm32Device_t*)canfd;
 
-    if ((device == NULL) || (device->handle == NULL) || (message == NULL))
-    {
-        return SMAC_RET_PARAM_ERR;
-    }
+    assert(device != NULL);
+    assert(device->handle != NULL);
+    assert(message != NULL);
 
     memset(message, 0, sizeof(*message));
 
@@ -306,6 +314,8 @@ smacRetCode_t smac_can_fd_async_receive_channel1(smacCanFd_t canfd, smacCanFdMes
 /// @details The specific implementation of @ref smac_can_fd_create_classic.
 smacCanFd_t smac_can_fd_create_classic(void* handle)
 {
+    assert(handle != NULL);
+
     // Allocate a device from the STM32 device queue for the classic CAN instance.
     stm32Device_t* device = stm32_device_queue_allocate_with_addition(handle, CAN_FD_ROLE_CLASSIC);
 
@@ -329,6 +339,9 @@ smacCanFd_t smac_can_fd_create_classic(void* handle)
 smacRetCode_t smac_can_fd_set_event_classic(smacCanFd_t canfd, smacCanEvent_t* event,
                                             smacMcuEventData_t data)
 {
+    assert(canfd != NULL);
+    assert(event != NULL);
+
     return stm32_device_event_queue_allocate((stm32Device_t*)canfd,
                                              (stm32DeviceEventHandle_t*)event, data);
 }
@@ -339,6 +352,9 @@ smacRetCode_t smac_can_fd_set_event_classic(smacCanFd_t canfd, smacCanEvent_t* e
 smacRetCode_t smac_can_fd_transmit_classic(smacCanFd_t canfd, const smacCanMessage* message,
                                            uint32_t timeout)
 {
+    assert(canfd != NULL);
+    assert(message != NULL);
+
     smacCanFdMessage can_fd_message;
 
     can_fd_message.head.ident           = message->head.ident;
@@ -360,6 +376,9 @@ smacRetCode_t smac_can_fd_transmit_classic(smacCanFd_t canfd, const smacCanMessa
 smacRetCode_t smac_can_fd_receive_channel0_classic(smacCanFd_t canfd, smacCanMessage* message,
                                                    uint32_t timeout)
 {
+    assert(canfd != NULL);
+    assert(message != NULL);
+
     smacCanFdMessage can_fd_message;
 
     smacRetCode_t code = smac_can_fd_receive_channel0(canfd, &can_fd_message, timeout);
@@ -383,6 +402,9 @@ smacRetCode_t smac_can_fd_receive_channel0_classic(smacCanFd_t canfd, smacCanMes
 smacRetCode_t smac_can_fd_receive_channel1_classic(smacCanFd_t canfd, smacCanMessage* message,
                                                    uint32_t timeout)
 {
+    assert(canfd != NULL);
+    assert(message != NULL);
+
     smacCanFdMessage can_fd_message;
 
     smacRetCode_t code = smac_can_fd_receive_channel1(canfd, &can_fd_message, timeout);
@@ -406,6 +428,9 @@ smacRetCode_t smac_can_fd_receive_channel1_classic(smacCanFd_t canfd, smacCanMes
 /// transmit function.
 smacRetCode_t smac_can_fd_async_transmit_classic(smacCanFd_t canfd, const smacCanMessage* message)
 {
+    assert(canfd != NULL);
+    assert(message != NULL);
+
     smacCanFdMessage can_fd_message;
 
     can_fd_message.head.ident           = message->head.ident;
@@ -431,10 +456,9 @@ static smacRetCode_t smac_can_fd_async_receive_classic(smacCanFd_t canfd, uint32
 {
     stm32Device_t* device = (stm32Device_t*)canfd;
 
-    if ((device == NULL) || (device->handle == NULL) || (message == NULL))
-    {
-        return SMAC_RET_PARAM_ERR;
-    }
+    assert(device != NULL);
+    assert(device->handle != NULL);
+    assert(message != NULL);
 
     memset(message, 0, sizeof(*message));
 
@@ -595,18 +619,24 @@ static void on_rx_fifo_callback(FDCAN_HandleTypeDef* hfdcan, uint32_t RxFifoITs,
 
     stm32DeviceEvent_t* event = stm32_device_event_queue_search((stm32DeviceHandle_t)hfdcan);
 
-    if ((event->device->addition & CAN_FD_ROLE_MASK) == CAN_FD_ROLE_FD)
+    if (event != NULL)
     {
-        if ((event != NULL) && (event->event != NULL) && (event->event->can_fd.rx_complete != NULL))
+        assert(event->device != NULL);
+        assert(event->event != NULL);
+
+        if ((event->device->addition & CAN_FD_ROLE_MASK) == CAN_FD_ROLE_FD)
         {
-            event->event->can_fd.rx_complete(event->device, event->event_data);
+            if (event->event->can_fd.rx_complete != NULL)
+            {
+                event->event->can_fd.rx_complete(event->device, event->event_data);
+            }
         }
-    }
-    else if ((event->device->addition & CAN_FD_ROLE_MASK) == CAN_FD_ROLE_CLASSIC)
-    {
-        if ((event != NULL) && (event->event != NULL) && (event->event->can.rx_complete != NULL))
+        else if ((event->device->addition & CAN_FD_ROLE_MASK) == CAN_FD_ROLE_CLASSIC)
         {
-            event->event->can.rx_complete(event->device, event->event_data);
+            if (event->event->can.rx_complete != NULL)
+            {
+                event->event->can.rx_complete(event->device, event->event_data);
+            }
         }
     }
 }
@@ -631,18 +661,24 @@ void HAL_FDCAN_TxBufferCompleteCallback(FDCAN_HandleTypeDef* hfdcan, uint32_t Bu
 
     stm32DeviceEvent_t* event = stm32_device_event_queue_search((stm32DeviceHandle_t)hfdcan);
 
-    if ((event->device->addition & CAN_FD_ROLE_MASK) == CAN_FD_ROLE_FD)
+    if (event != NULL)
     {
-        if ((event != NULL) && (event->event != NULL) && (event->event->can_fd.tx_complete != NULL))
+        assert(event->device != NULL);
+        assert(event->event != NULL);
+
+        if ((event->device->addition & CAN_FD_ROLE_MASK) == CAN_FD_ROLE_FD)
         {
-            event->event->can_fd.tx_complete(event->device, event->event_data);
+            if ((event->event->can_fd.tx_complete != NULL))
+            {
+                event->event->can_fd.tx_complete(event->device, event->event_data);
+            }
         }
-    }
-    else if ((event->device->addition & CAN_FD_ROLE_MASK) == CAN_FD_ROLE_CLASSIC)
-    {
-        if ((event != NULL) && (event->event != NULL) && (event->event->can.tx_complete != NULL))
+        else if ((event->device->addition & CAN_FD_ROLE_MASK) == CAN_FD_ROLE_CLASSIC)
         {
-            event->event->can.tx_complete(event->device, event->event_data);
+            if ((event->event->can.tx_complete != NULL))
+            {
+                event->event->can.tx_complete(event->device, event->event_data);
+            }
         }
     }
 }
