@@ -1,8 +1,8 @@
 #ifndef _STM32_H_
 #define _STM32_H_
 
-#include <smac-mcu.h>
-#include <smac-stm32.h>
+#include <smac/configuration/smac-stm32.h>
+#include <smac/middleware/smac-mcu.h>
 
 #ifdef __cplusplus
 extern "C" {

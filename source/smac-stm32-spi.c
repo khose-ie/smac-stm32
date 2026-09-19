@@ -1,6 +1,5 @@
 #include <assert.h>
-#include <smac-mcu.h>
-#include <smac-stm32.h>
+#include <smac/middleware/smac-mcu.h>
 #include <stm32.h>
 
 #define STM32_SPI_ROLE_MASK   (0x80000000)

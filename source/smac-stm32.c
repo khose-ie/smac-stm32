@@ -1,8 +1,8 @@
 
 
 #include <assert.h>
-#include <smac-mcu.h>
-#include <smac-stm32.h>
+#include <smac/configuration/smac-stm32.h>
+#include <smac/middleware/smac-mcu.h>
 #include <stm32.h>
 #include <string.h>
 

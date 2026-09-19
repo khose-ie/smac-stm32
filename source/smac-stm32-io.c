@@ -1,6 +1,5 @@
 #include <assert.h>
-#include <smac-mcu.h>
-#include <smac-stm32.h>
+#include <smac/middleware/smac-mcu.h>
 #include <stm32.h>
 
 #define io_state_stm32_to_smac(x) ((x) == GPIO_PIN_SET ? SMAC_IO_SET : SMAC_IO_RST)
