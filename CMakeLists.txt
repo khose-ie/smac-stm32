@@ -11,7 +11,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS ON)
 
 # Set the project name
-set(CMAKE_PROJECT_NAME smac-stm32)
+set(CMAKE_PROJECT_NAME smac-mw-mcu-stm32)
 
 # Project settings
 project(${CMAKE_PROJECT_NAME})
